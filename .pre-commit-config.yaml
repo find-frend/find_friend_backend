@@ -1,0 +1,44 @@
+exclude: .*migrations\/.*
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args:
+          [
+            '--profile',
+            'black',
+            '--filter-files',
+            --skip=migrations,
+            --line-length=79,
+          ]
+
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.4
+    hooks:
+      - id: autopep8
+        exclude: ^migrations/
+
+  - repo: https://github.com/myint/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args: [--remove-all-unused-imports, --remove-unused-variables]
+        exclude: ^migrations/
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-docstrings
+        args: [--config=.flake8]
