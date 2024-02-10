@@ -5,6 +5,8 @@ click==8.1.7
 distlib==0.3.8
 Django==5.0.2
 djangorestframework==3.14.0
+djangorestframework-simplejwt==4.8.0
+djoser==2.1.0
 drf-yasg==1.21.7
 filelock==3.13.1
 flake8==7.0.0
