@@ -13,8 +13,9 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = (
-    ['158.160.23.82', '127.0.0.1', 'localhost'] if DEBUG else os.getenv(
-        "DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
+    ["127.0.0.1", "localhost"]
+    if DEBUG
+    else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
 
@@ -25,9 +26,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework.authtoken',
+    "rest_framework.authtoken",
     "rest_framework",
-    'djoser',
+    "djoser",
+    "drf_yasg",
     "api.apps.ApiConfig",
     "users.apps.UsersConfig",
 ]
@@ -98,7 +100,9 @@ if DEBUG:
 else:
     DATABASES = {
         "default": {
-            "ENGINE": os.getenv("DB_ENGINE", default="django.db.backends.postgresql"),
+            "ENGINE": os.getenv(
+                "DB_ENGINE", default="django.db.backends.postgresql"
+            ),
             "NAME": os.getenv("POSTGRES_DB", default="postgres"),
             "USER": os.getenv("POSTGRES_USER", default="postgres"),
             "PASSWORD": os.getenv("POSTGRES_PASSWORD", default="postgrespswd"),
@@ -107,7 +111,7 @@ else:
         }
     }
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -125,15 +129,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DJOSER = {
-    'SERIALIZERS': {
-        'user': 'api.serializers.MyUserSerializer',
-        'user_create': 'api.serializers.MyUserCreateSerializer',
-        'current_user': 'api.serializers.MyUserSerializer',
+    "SERIALIZERS": {
+        "user": "api.serializers.MyUserSerializer",
+        "user_create": "api.serializers.MyUserCreateSerializer",
+        "current_user": "api.serializers.MyUserSerializer",
     },
-    'PERMISSIONS': {
-        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+    "PERMISSIONS": {
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
     },
-    'HIDE_USERS': False,
+    "HIDE_USERS": False,
 }
 
 LANGUAGE_CODE = "ru"
@@ -156,11 +160,10 @@ MEDIA_ROOT = BASE_DIR / "media/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
     ],
 }
