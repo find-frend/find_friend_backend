@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class EventMember(models.Model):
     event = models.ForeignKey(Event,
                               on_delete=models.CASCADE)
