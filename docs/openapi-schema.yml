@@ -1,434 +1,541 @@
-openapi: 3.0.2
+swagger: '2.0'
 info:
-  title: 'Find_Friend'
-  version: ''
+  title: API для приложения "Найди друга"
+  description: Документация для приложения "Найди друга"
+  version: v1
+host: 127.0.0.1:8000
+schemes:
+  - http
+basePath: /api/v1
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+  - Basic: []
 paths:
-  /api/users/:
+  /auth/token/login/:
+    post:
+      operationId: auth_token_login_create
+      description: Use this endpoint to obtain user authentication token.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TokenCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TokenCreate'
+      tags:
+        - auth
+    parameters: []
+  /auth/token/logout/:
+    post:
+      operationId: auth_token_logout_create
+      description: Use this endpoint to logout user (remove user authentication token).
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - auth
+    parameters: []
+  /users/:
     get:
-      operationId: Список пользователей
-      description: ''
+      operationId: users_list
+      description: Вьюсет пользователя.
       parameters:
         - name: page
-          required: false
           in: query
-          description: Номер страницы.
-          schema:
-            type: integer
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
         - name: limit
-          required: false
           in: query
-          description: Количество объектов на странице.
-          schema:
-            type: integer
+          description: Number of results to return per page.
+          required: false
+          type: integer
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    example: 123
-                    description: 'Общее количество объектов в базе'
-                  next:
-                    type: string
-                    nullable: true
-                    format: uri
-                    example: http://find_friend.example.org/api/users/?page=4
-                    description: 'Ссылка на следующую страницу'
-                  previous:
-                    type: string
-                    nullable: true
-                    format: uri
-                    example: http://find_friend.example.org/api/users/?page=2
-                    description: 'Ссылка на предыдущую страницу'
-                  results:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
-                    description: 'Список объектов текущей страницы'
           description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MyUser'
       tags:
-        - Пользователи
+        - users
     post:
-      operationId: Регистрация пользователя
-      description: ''
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CustomUserCreate'
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CustomUserResponseOnCreate'
-          description: 'Пользователь успешно создан'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-      tags:
-        - Пользователи
-  /api/users/{id}/:
-    get:
-      operationId: Профиль пользователя
-      description: 'Доступно всем пользователям.'
-      security:
-        - Token: [ ]
+      operationId: users_create
+      description: Вьюсет пользователя.
       parameters:
-        - name: id
-          in: path
+        - name: data
+          in: body
           required: true
-          description: "Уникальный id этого пользователя"
           schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-          description: ''
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/AuthenticationError'
-      tags:
-        - Пользователи
-  /api/users/me/:
-    get:
-      operationId: Текущий пользователь
-      description: ''
-      parameters: []
-      security:
-        - Token: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-          description: ''
-        '401':
-          $ref: '#/components/responses/AuthenticationError'
-      tags:
-        - Пользователи
-
-  /api/users/set_password/:
-    post:
-      operationId: Изменение пароля
-      description: 'Изменение пароля текущего пользователя'
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SetPassword'
-      responses:
-        '204':
-          description: 'Пароль успешно изменен'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/AuthenticationError'
-      tags:
-        - Пользователи
-  /api/auth/token/login/:
-    post:
-      operationId: Получить токен авторизации
-      description: Используется для авторизации по емейлу и паролю, чтобы далее использовать токен при запросах.
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TokenCreate'
+            $ref: '#/definitions/MyUserCreate'
       responses:
         '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenGetResponse'
           description: ''
+          schema:
+            $ref: '#/definitions/MyUserCreate'
       tags:
-        - Пользователи
-  /api/auth/token/logout/:
+        - users
+    parameters: []
+  /users/activation/:
     post:
-      operationId: Удаление токена
-      description: Удаляет токен текущего пользователя
+      operationId: users_activation
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Activation'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Activation'
+      tags:
+        - users
+    parameters: []
+  /users/me/:
+    get:
+      operationId: users_me_read
+      description: Вьюсет пользователя.
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    put:
+      operationId: users_me_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    patch:
+      operationId: users_me_partial_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    delete:
+      operationId: users_me_delete
+      description: Вьюсет пользователя.
       parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema: {}
-
       responses:
         '204':
-          content:
-            application/json:
-              schema: {}
           description: ''
-        '401':
-          $ref: '#/components/responses/AuthenticationError'
       tags:
-        - Пользователи
-components:
-  schemas:
-    User:
-      description:  'Пользователь'
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 254
-          description: "Адрес электронной почты"
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          description: "Уникальный юзернейм"
-          pattern: ^[\w.@+-]+\z
-          maxLength: 150
-        first_name:
-          type: string
-          maxLength: 150
-          description: "Имя"
-          example: "Вася"
-        last_name:
-          type: string
-          maxLength: 150
-          description: "Фамилия"
-          example: "Пупкин"
-        is_subscribed:
-          type: boolean
-          readOnly: true
-          description: "Подписан ли текущий пользователь на этого"
-          example: false
-      required:
-        - username
-    CustomUserCreate:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 254
-          description: "Адрес электронной почты"
-          example: "vpupkin@yandex.ru"
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          description: "Уникальный юзернейм"
-          pattern: ^[\w.@+-]+\z
-          maxLength: 150
-          example: "vasya.pupkin"
-        first_name:
-          type: string
-          maxLength: 150
-          description: "Имя"
-          example: "Вася"
-        last_name:
-          type: string
-          maxLength: 150
-          description: "Фамилия"
-          example: "Пупкин"
-        password:
-          type: string
-          maxLength: 150
-          description: "Пароль"
-          example: "Qwerty123"
-      required:
-        - username
-        - password
-        - first_name
-        - last_name
-        - email
-    CustomUserResponseOnCreate:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 254
-          description: "Адрес электронной почты"
-          example: "vpupkin@yandex.ru"
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          description: "Уникальный юзернейм"
-          pattern: ^[\w.@+-]+\z
-          maxLength: 150
-          example: "vasya.pupkin"
-        first_name:
-          type: string
-          maxLength: 150
-          description: "Имя"
-          example: "Вася"
-        last_name:
-          type: string
-          maxLength: 150
-          description: "Фамилия"
-          example: "Пупкин"
-      required:
-        - username
-        - first_name
-        - last_name
-        - email
-    Activation:
-      type: object
-      properties:
-        uid:
-          type: string
-        token:
-          type: string
-      required:
-        - uid
-        - token
-    SendEmailReset:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-      required:
-        - email
-    PasswordResetConfirm:
-      type: object
-      properties:
-        uid:
-          type: string
-        token:
-          type: string
-        new_password:
-          type: string
-      required:
-        - uid
-        - token
-        - new_password
-    UsernameResetConfirm:
-      type: object
-      properties:
-        new_email:
-          type: string
-          format: email
-          maxLength: 254
-    SetPassword:
-      type: object
-      properties:
-        new_password:
-          type: string
-        current_password:
-          type: string
-      required:
-        - new_password
-        - current_password
-    SetUsername:
-      type: object
-      properties:
-        current_password:
-          type: string
-        new_email:
-          type: string
-          format: email
-          maxLength: 254
-      required:
-        - current_password
-    TokenCreate:
-      type: object
-      properties:
-        password:
-          type: string
-        email:
-          type: string
-    TokenGetResponse:
-      type: object
-      properties:
-        auth_token:
-          type: string
-
-    SelfMadeError:
-      description: Ошибка
-      type: object
-      properties:
-        errors:
-          description: 'Описание ошибки'
-          type: string
-
-    AuthenticationError:
-      description: Пользователь не авторизован
-      type: object
-      properties:
-        detail:
-          description: 'Описание ошибки'
-          example: "Учетные данные не были предоставлены."
-          type: string
-
-    PermissionDenied:
-      description: Недостаточно прав
-      type: object
-      properties:
-        detail:
-          description: 'Описание ошибки'
-          example: "У вас недостаточно прав для выполнения данного действия."
-          type: string
-    NotFound:
-      description: Объект не найден
-      type: object
-      properties:
-        detail:
-          description: 'Описание ошибки'
-          example: "Страница не найдена."
-          type: string
-
-  responses:
-    ValidationError:
-      description: 'Ошибки валидации в стандартном формате DRF'
-      content:
-        application/json:
+        - users
+    parameters: []
+  /users/resend_activation/:
+    post:
+      operationId: users_resend_activation
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
           schema:
-            $ref: '#/components/schemas/ValidationError'
-    NestedValidationError:
-      description: 'Ошибки валидации в стандартном формате DRF, в том числе с внутренними элементами.'
-      content:
-        application/json:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
           schema:
-            oneOf:
-              - $ref: '#/components/schemas/NestedValidationError'
-              - $ref: '#/components/schemas/ValidationError'
-
-    AuthenticationError:
-      description: Пользователь не авторизован
-      content:
-        application/json:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_email/:
+    post:
+      operationId: users_reset_username
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
           schema:
-            $ref: '#/components/schemas/AuthenticationError'
-
-    PermissionDenied:
-      description: Недостаточно прав
-      content:
-        application/json:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
           schema:
-            $ref: '#/components/schemas/PermissionDenied'
-
-    NotFound:
-      description: Объект не найден
-      content:
-        application/json:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_email_confirm/:
+    post:
+      operationId: users_reset_username_confirm
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
           schema:
-            $ref: '#/components/schemas/NotFound'
-
-
-  securitySchemes:
-    Token:
-      description: 'Авторизация по токену. <br>
-      Все запросы от имени пользователя должны выполняться с заголовком "Authorization: Token TOKENVALUE"'
-      type: http
-      scheme: token
+            $ref: '#/definitions/UsernameResetConfirm'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/UsernameResetConfirm'
+      tags:
+        - users
+    parameters: []
+  /users/reset_password/:
+    post:
+      operationId: users_reset_password
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_password_confirm/:
+    post:
+      operationId: users_reset_password_confirm
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordResetConfirm'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/PasswordResetConfirm'
+      tags:
+        - users
+    parameters: []
+  /users/set_email/:
+    post:
+      operationId: users_set_username
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetUsername'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SetUsername'
+      tags:
+        - users
+    parameters: []
+  /users/set_password/:
+    post:
+      operationId: users_set_password
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetPassword'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SetPassword'
+      tags:
+        - users
+    parameters: []
+  /users/{id}/:
+    get:
+      operationId: users_read
+      description: Вьюсет пользователя.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    put:
+      operationId: users_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    patch:
+      operationId: users_partial_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    delete:
+      operationId: users_delete
+      description: Вьюсет пользователя.
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - users
+    parameters:
+      - name: id
+        in: path
+        description: A unique integer value identifying this Пользователи.
+        required: true
+        type: integer
+definitions:
+  TokenCreate:
+    type: object
+    properties:
+      password:
+        title: Password
+        type: string
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        minLength: 1
+  MyUser:
+    required:
+      - email
+      - first_name
+      - last_name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+      first_name:
+        title: Имя
+        type: string
+        maxLength: 158
+        minLength: 1
+      last_name:
+        title: Фамилия
+        type: string
+        maxLength: 150
+        minLength: 1
+  MyUserCreate:
+    required:
+      - first_name
+      - last_name
+      - email
+      - password
+    type: object
+    properties:
+      first_name:
+        title: Имя
+        type: string
+        maxLength: 158
+        minLength: 1
+      last_name:
+        title: Фамилия
+        type: string
+        maxLength: 150
+        minLength: 1
+      email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  Activation:
+    required:
+      - uid
+      - token
+    type: object
+    properties:
+      uid:
+        title: Uid
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: string
+        minLength: 1
+  SendEmailReset:
+    required:
+      - email
+    type: object
+    properties:
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+  UsernameResetConfirm:
+    required:
+      - new_email
+    type: object
+    properties:
+      new_email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+  PasswordResetConfirm:
+    required:
+      - uid
+      - token
+      - new_password
+    type: object
+    properties:
+      uid:
+        title: Uid
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: string
+        minLength: 1
+      new_password:
+        title: New password
+        type: string
+        minLength: 1
+  SetUsername:
+    required:
+      - current_password
+      - new_email
+    type: object
+    properties:
+      current_password:
+        title: Current password
+        type: string
+        minLength: 1
+      new_email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+  SetPassword:
+    required:
+      - new_password
+      - current_password
+    type: object
+    properties:
+      new_password:
+        title: New password
+        type: string
+        minLength: 1
+      current_password:
+        title: Current password
+        type: string
+        minLength: 1
