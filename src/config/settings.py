@@ -137,6 +137,8 @@ DJOSER = {
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAdminUser"],
+        "activation": ["rest_framework.permissions.IsAdminUser"],
     },
     "HIDE_USERS": False,
 }
