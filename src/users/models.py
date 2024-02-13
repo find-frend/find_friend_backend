@@ -4,7 +4,9 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from config import settings
+
+from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
+
 
 from .utils import make_thumbnail
 
@@ -41,16 +43,16 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(
         "Электронная почта",
-        max_length=settings.MAX_LENGTH_EMAIL,
+        max_length=MAX_LENGTH_EMAIL,
         blank=False,
         null=False,
         unique=True,
     )
     first_name = models.CharField(
-        "Имя", max_length=settings.MAX_LENGTH_CHAR, blank=False, null=False
+        "Имя", max_length=MAX_LENGTH_CHAR, blank=False, null=False
     )
     last_name = models.CharField(
-        "Фамилия", max_length=settings.MAX_LENGTH_CHAR, blank=False, null=False
+        "Фамилия", max_length=MAX_LENGTH_CHAR, blank=False, null=False
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -184,7 +186,6 @@ class Profile(models.Model):
         return self.nickname
 
     def save(self, *args, **kwargs):
+        """Сохранение аватара заданного размера."""
         self.avatar = make_thumbnail(self.avatar, size=(100, 100))
-
         super().save(*args, **kwargs)
-
