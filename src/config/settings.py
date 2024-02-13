@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = (
-    ["*"]
+    ["127.0.0.1", "localhost"]
     if DEBUG
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
