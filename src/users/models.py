@@ -98,3 +98,30 @@ def auto_admin_for_superuser(sender, instance, *args, **kwargs):
     if instance.is_superuser:
         instance.role = User.ADMIN
         instance.is_staff = True
+
+
+class Friend(models.Model):
+    """Модель друзей."""
+    application_creator = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="application_creator"
+    )
+    friend = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="friend"
+    )
+    is_added = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "application_creator",
+                    "friend",
+                ],
+                name="unique_friend",
+            )
+        ]
+        verbose_name = "Друг"
+        verbose_name_plural = "Друзья"
+
+    def __str__(self):
+        return f"{self.friend} в друзьях у {self.application_creator}"
