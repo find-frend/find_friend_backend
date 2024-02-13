@@ -170,3 +170,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_CHAR = 150
