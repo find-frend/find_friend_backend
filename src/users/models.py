@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from ..config import settings
 
 from .utils import make_thumbnail
 
@@ -37,31 +38,19 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     """Кастомная модель пользователя."""
 
-    USER = "user"
-    ADMIN = "admin"
-
-    ROLES_CHOISES = (
-        (USER, "user"),
-        (ADMIN, "admin"),
-    )
     username = None
     email = models.EmailField(
         "Электронная почта",
-        max_length=100,
+        max_length=settings.MAX_LENGTH_EMAIL,
         blank=False,
         null=False,
         unique=True,
     )
     first_name = models.CharField(
-        "Имя", max_length=40, blank=False, null=False
+        "Имя", max_length=settings.MAX_LENGTH_CHAR, blank=False, null=False
     )
     last_name = models.CharField(
-        "Фамилия", max_length=40, blank=False, null=False
-    )
-    role = models.CharField(
-        max_length=20,
-        choices=ROLES_CHOISES,
-        default=USER,
+        "Фамилия", max_length=settings.MAX_LENGTH_CHAR, blank=False, null=False
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -70,19 +59,11 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ["-id"]
-        verbose_name = "Пользователи"
+        verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
-    @property
-    def is_user(self):
-        return self.role == User.USER
-
-    @property
-    def is_admin(self):
-        return self.role == User.ADMIN
-
     def __str__(self):
-        return f"{self.first_name}, {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
 
 
 @receiver(pre_save, sender=User)
@@ -119,21 +100,21 @@ class Profile(models.Model):
     )
     # primary_key=True,)
     email = models.EmailField(
-        _("Электронная почта"), max_length=100, unique=True
+        _("Электронная почта"), max_length=MAX_LENGTH_EMAIL, unique=True
     )
     last_name = models.CharField(
         _("Фамилия"),
-        max_length=40,
+        max_length=MAX_LENGTH_CHAR,
         null=True,
     )
     first_name = models.CharField(
         _("Имя"),
-        max_length=40,
+        max_length=MAX_LENGTH_CHAR,
         null=True,
     )
     nickname = models.SlugField(
         "Ник пользователя",
-        max_length=150,
+        max_length=MAX_LENGTH_CHAR,
         unique=True,
         blank=True,
         null=True,
@@ -146,7 +127,7 @@ class Profile(models.Model):
     interests = models.JSONField("Интересы", blank=False, default=list)
     city = models.CharField(
         "Место проживания",
-        max_length=50,
+        max_length=MAX_LENGTH_CHAR,
         null=True,
         blank=True,
     )
@@ -160,12 +141,12 @@ class Profile(models.Model):
     )
     profession = models.CharField(
         "Профессия",
-        max_length=150,
+        max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
     character = models.CharField(
         "Характер",
-        max_length=150,
+        max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
     sex = models.CharField(
@@ -177,19 +158,19 @@ class Profile(models.Model):
     )
     purpose = models.CharField(
         "Цель поиска друга",
-        max_length=150,
+        max_length=MAX_LENGTH_CHAR,
         null=True,
         blank=True,
     )
     network_nick = models.CharField(
         "Ник в других соц.сетях",
-        max_length=30,
+        max_length=MAX_LENGTH_CHAR,
         null=True,
         blank=True,
     )
     additionally = models.TextField(
         "Дополнительно",
-        max_length=200,
+        max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
     USERNAME_FIELD = "nickname"
@@ -206,3 +187,4 @@ class Profile(models.Model):
         self.avatar = make_thumbnail(self.avatar, size=(100, 100))
 
         super().save(*args, **kwargs)
+

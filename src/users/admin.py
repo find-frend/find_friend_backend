@@ -32,6 +32,8 @@ class MyUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "email",
+                    "first_name",
+                    "last_name",
                     "password1",
                     "password2",
                     "is_staff",
@@ -42,7 +44,6 @@ class MyUserAdmin(UserAdmin):
     )
     search_fields = ("email",)
     ordering = ("email",)
-    list_editable = ("role",)
     empty_value_display = "-пусто-"
 
 

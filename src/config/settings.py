@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "api.apps.ApiConfig",
     "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
 ]
 
 MIDDLEWARE = [
@@ -136,6 +137,8 @@ DJOSER = {
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAdminUser"],
+        "activation": ["rest_framework.permissions.IsAdminUser"],
     },
     "HIDE_USERS": False,
 }
@@ -167,3 +170,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_CHAR = 150
