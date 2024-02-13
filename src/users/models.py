@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
 
+
 from .utils import make_thumbnail
 
 
