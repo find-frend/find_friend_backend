@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "api.apps.ApiConfig",
     "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
 ]
 
 MIDDLEWARE = [
