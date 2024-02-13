@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import User, Friend
 
 
 @admin.register(User)
@@ -36,3 +36,12 @@ class MyUserAdmin(UserAdmin):
     ordering = ("email",)
     list_editable = ("role",)
     empty_value_display = "-пусто-"
+
+
+@admin.register(Friend)
+class FriendAdmin(admin.ModelAdmin):
+    list_display = (
+        "application_creator",
+        "friend",
+        "is_added",
+    )
