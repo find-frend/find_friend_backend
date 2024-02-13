@@ -14,7 +14,7 @@ class MyUserAdmin(UserAdmin):
         "is_active",
     )
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "first_name", "last_name", "password")}),
         ("Permissions", {"fields": ("is_staff", "is_active")}),
     )
     add_fieldsets = (
@@ -24,6 +24,8 @@ class MyUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "email",
+                    "first_name",
+                    "last_name",
                     "password1",
                     "password2",
                     "is_staff",
