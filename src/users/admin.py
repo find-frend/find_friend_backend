@@ -1,20 +1,28 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.safestring import mark_safe
 
-from .models import User
+from .models import Profile, User
 
 
 @admin.register(User)
 class MyUserAdmin(UserAdmin):
     model = User
-    list_display = ("email", "first_name", "last_name", "role", "is_staff")
+    list_display = (
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "role",
+        "is_staff",
+    )
     list_filter = (
         "email",
         "is_staff",
         "is_active",
     )
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "first_name", "last_name", "password")}),
         ("Permissions", {"fields": ("is_staff", "is_active")}),
     )
     add_fieldsets = (
@@ -36,3 +44,35 @@ class MyUserAdmin(UserAdmin):
     ordering = ("email",)
     list_editable = ("role",)
     empty_value_display = "-пусто-"
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    model = Profile
+    list_display = (
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "nickname",
+        "age",
+        "interests",
+        "city",
+        "preview",
+        "profession",
+        "character",
+        "sex",
+        "purpose",
+        "network_nick",
+        "additionally",
+    )
+    search_fields = ("nickname", "first_name", "last_name")
+    ordering = ("nickname",)
+    readonly_fields = ["preview"]
+
+    def preview(self, obj):
+        return mark_safe(
+            f"<img src='{obj.avatar.url}' width={obj.avatar.width}/>"
+        )
+
+    preview.short_description = "Изображение"
