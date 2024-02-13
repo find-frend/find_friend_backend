@@ -1,5 +1,5 @@
 from django.db import models
-from .constants import MAX_LENGTH_VALUE
+from config.settings import MAX_LENGTH_CHAR
 
 
 class Interest(models.Model):
@@ -7,7 +7,7 @@ class Interest(models.Model):
     """ Модель интересов. """
 
     name = models.CharField(
-        max_length=MAX_LENGTH_VALUE,
+        max_length=MAX_LENGTH_CHAR,
         verbose_name='Название интереса'
     )
 
@@ -24,7 +24,7 @@ class Event(models.Model):
     """ Модель мероприятия. """
 
     name = models.CharField(
-        max_length=MAX_LENGTH_VALUE,
+        max_length=MAX_LENGTH_CHAR,
         verbose_name='Название мероприятия'
     )
     description = models.TextField(
@@ -35,18 +35,18 @@ class Event(models.Model):
         verbose_name='Интересы мероприятия'
     )
     event_type = models.CharField(
-        max_length=MAX_LENGTH_VALUE,
+        max_length=MAX_LENGTH_CHAR,
         verbose_name='Тип мероприятия'
     )
     date = models.DateTimeField(
         verbose_name='Дата мероприятия',
     )
     location = models.CharField(
-        max_length=MAX_LENGTH_VALUE,
+        max_length=MAX_LENGTH_CHAR,
         verbose_name='Место проведения мероприятия'
     )
     image = models.ImageField(
-        upload_to='events/images/',
+        upload_to='images/events/',
         verbose_name='Фото мероприятия',
         blank=True
     )
