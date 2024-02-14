@@ -174,10 +174,10 @@ class Profile(models.Model):
 class Friend(models.Model):
     """Модель друзей."""
     initiator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="initiator"
+        Profile, on_delete=models.CASCADE, related_name="initiator"
     )
     friend = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="friend"
+        Profile, on_delete=models.CASCADE, related_name="friend"
     )
     is_added = models.BooleanField(default=False)
 
@@ -185,7 +185,7 @@ class Friend(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=[
-                    "application_creator",
+                    "initiator",
                     "friend",
                 ],
                 name="unique_friend",
