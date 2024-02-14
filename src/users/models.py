@@ -174,7 +174,7 @@ class Profile(models.Model):
 class Friend(models.Model):
     """Модель друзей."""
     initiator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="application_creator"
+        User, on_delete=models.CASCADE, related_name="initiator"
     )
     friend = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="friend"
@@ -195,4 +195,4 @@ class Friend(models.Model):
         verbose_name_plural = "Друзья"
 
     def __str__(self):
-        return f"{self.friend} в друзьях у {self.application_creator}"
+        return f"{self.friend} в друзьях у {self.initiator}"
