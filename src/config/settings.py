@@ -137,6 +137,8 @@ DJOSER = {
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAdminUser"],
+        "activation": ["rest_framework.permissions.IsAdminUser"],
     },
     "HIDE_USERS": False,
 }
@@ -153,10 +155,10 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "static/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "static/")
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -168,3 +170,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_CHAR = 150
