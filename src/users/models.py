@@ -1,12 +1,9 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
-
 
 from .utils import make_thumbnail
 
@@ -66,23 +63,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-
-
-@receiver(pre_save, sender=User)
-def auto_is_staff(sender, instance, *args, **kwargs):
-    """Авто присвоение флага is_staff пользователям с ролью 'admin'."""
-    if instance.role == User.ADMIN:
-        instance.is_staff = True
-    elif instance.role == User.USER:
-        instance.is_staff = False
-
-
-@receiver(pre_save, sender=User)
-def auto_admin_for_superuser(sender, instance, *args, **kwargs):
-    """Авто присвоение роли 'admin' суперюзерам."""
-    if instance.is_superuser:
-        instance.role = User.ADMIN
-        instance.is_staff = True
 
 
 class Profile(models.Model):
