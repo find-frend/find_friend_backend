@@ -7,13 +7,14 @@ from .models import Profile, User
 
 @admin.register(User)
 class MyUserAdmin(UserAdmin):
+    """Админка пользователя."""
+
     model = User
     list_display = (
         "id",
         "email",
         "first_name",
         "last_name",
-        "role",
         "is_staff",
     )
     list_filter = (
@@ -49,6 +50,8 @@ class MyUserAdmin(UserAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
+    """Админка профиля пользователя."""
+
     model = Profile
     list_display = (
         "id",
@@ -72,6 +75,7 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = ["preview"]
 
     def preview(self, obj):
+        """Отображение аватара профиля."""
         return mark_safe(
             f"<img src='{obj.avatar.url}' width={obj.avatar.width}/>"
         )
