@@ -1,10 +1,16 @@
 from djoser.views import UserViewSet
 from rest_framework.viewsets import ModelViewSet
 
-from users.models import Profile, User
+from events.models import Event
+from users.models import Friend, Profile, User
 
 from .pagination import MyPagination
-from .serializers import MyUserSerializer, ProfileSerializer
+from .serializers import (
+    EventSerializer,
+    FriendSerializer,
+    MyUserSerializer,
+    ProfileSerializer,
+)
 
 
 class MyUserViewSet(UserViewSet):
@@ -20,3 +26,17 @@ class ProfileViewSet(ModelViewSet):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+
+
+class FriendViewSet(ModelViewSet):
+    """Вьюсет друга пользователя."""
+
+    queryset = Friend.objects.all()
+    serializer_class = FriendSerializer
+
+
+class EventViewSet(ModelViewSet):
+    """Вьюсет мероприятия пользователя."""
+
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer

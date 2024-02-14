@@ -1,7 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.serializers import ModelSerializer
 
-from users.models import Profile, User
+from events.models import Event
+from users.models import Friend, Profile, User
 
 
 class MyUserSerializer(UserSerializer):
@@ -49,4 +50,34 @@ class ProfileSerializer(ModelSerializer):
             "purpose",
             "network_nick",
             "additionally",
+        )
+
+
+class FriendSerializer(ModelSerializer):
+    """Сериализатор друга пользователя."""
+
+    class Meta:
+        model = Friend
+        fields = (
+            "id",
+            "initiator",
+            "friend",
+            "is_added",
+        )
+
+
+class EventSerializer(ModelSerializer):
+    """Сериализатор мероприятия пользователя."""
+
+    class Meta:
+        model = Event
+        fields = (
+            "id",
+            "name",
+            "description",
+            "interests",
+            "event_type",
+            "date",
+            "location",
+            "image",
         )

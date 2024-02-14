@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
-from .models import Profile, User, Friend
+from .models import Friend, Profile, User
 
 
 @admin.register(User)
@@ -48,7 +48,6 @@ class MyUserAdmin(UserAdmin):
     empty_value_display = "-пусто-"
 
 
-
 @admin.register(Friend)
 class FriendAdmin(admin.ModelAdmin):
     """Админка друга пользователя."""
@@ -58,6 +57,7 @@ class FriendAdmin(admin.ModelAdmin):
         "friend",
         "is_added",
     )
+
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -85,11 +85,12 @@ class ProfileAdmin(admin.ModelAdmin):
     ordering = ("nickname",)
     readonly_fields = ["preview"]
 
+    @admin.display(description="Фото профиля", empty_value="Нет фото")
     def preview(self, obj):
         """Отображение аватара профиля."""
-        return mark_safe(
-            f"<img src='{obj.avatar.url}' width={obj.avatar.width}/>"
-        )
-
-    preview.short_description = "Изображение"
-
+        if obj.avatar:
+            return mark_safe(
+                f"""<img src='{obj.avatar.url}'
+                 style="max-height: 100px; max-width: 100px">'"""
+            )
+        return None

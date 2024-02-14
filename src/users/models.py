@@ -116,9 +116,7 @@ class Profile(models.Model):
     liked_list = models.JSONField(blank=True, default=list)
     avatar = models.ImageField(
         "Аватарка",
-        null=True,
         blank=True,
-        default="",
         upload_to="images/profile/",
     )
     profession = models.CharField(
@@ -167,12 +165,14 @@ class Profile(models.Model):
 
     def save(self, *args, **kwargs):
         """Сохранение аватара заданного размера."""
-        self.avatar = make_thumbnail(self.avatar, size=(100, 100))
+        if self.avatar:
+            self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
 
 
 class Friend(models.Model):
     """Модель друзей."""
+
     initiator = models.ForeignKey(
         Profile, on_delete=models.CASCADE, related_name="initiator"
     )
