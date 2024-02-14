@@ -51,8 +51,10 @@ class MyUserAdmin(UserAdmin):
 
 @admin.register(Friend)
 class FriendAdmin(admin.ModelAdmin):
+    """Админка друга пользователя."""
+
     list_display = (
-        "application_creator",
+        "initiator",
         "friend",
         "is_added",
     )
