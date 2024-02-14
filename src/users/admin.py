@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
-from .models import Profile, User
+from .models import Profile, User, Friend
 
 
 @admin.register(User)
@@ -48,6 +48,17 @@ class MyUserAdmin(UserAdmin):
     empty_value_display = "-пусто-"
 
 
+
+@admin.register(Friend)
+class FriendAdmin(admin.ModelAdmin):
+    """Админка друга пользователя."""
+
+    list_display = (
+        "initiator",
+        "friend",
+        "is_added",
+    )
+
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     """Админка профиля пользователя."""
@@ -81,3 +92,4 @@ class ProfileAdmin(admin.ModelAdmin):
         )
 
     preview.short_description = "Изображение"
+

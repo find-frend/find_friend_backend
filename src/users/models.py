@@ -169,3 +169,30 @@ class Profile(models.Model):
         """Сохранение аватара заданного размера."""
         self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
+
+
+class Friend(models.Model):
+    """Модель друзей."""
+    initiator = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name="initiator"
+    )
+    friend = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name="friend"
+    )
+    is_added = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "initiator",
+                    "friend",
+                ],
+                name="unique_friend",
+            )
+        ]
+        verbose_name = "Друг"
+        verbose_name_plural = "Друзья"
+
+    def __str__(self):
+        return f"{self.friend} в друзьях у {self.initiator}"
