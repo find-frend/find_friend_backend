@@ -2,6 +2,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.serializers import ModelSerializer
 
 from events.models import Event
+from notifications.models import Notification
 from users.models import Friend, Profile, User
 
 
@@ -82,3 +83,11 @@ class EventSerializer(ModelSerializer):
             "location",
             "image",
         )
+
+
+class NotificationSerializer(ModelSerializer):
+    """Сериализатор уведомлений."""
+
+    class Meta:
+        model = Notification
+        fields = "__all__"

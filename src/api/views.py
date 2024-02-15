@@ -2,6 +2,7 @@ from djoser.views import UserViewSet
 from rest_framework.viewsets import ModelViewSet
 
 from events.models import Event
+from notifications.models import Notification
 from users.models import Friend, Profile, User
 
 from .pagination import MyPagination
@@ -9,6 +10,7 @@ from .serializers import (
     EventSerializer,
     FriendSerializer,
     MyUserSerializer,
+    NotificationSerializer,
     ProfileSerializer,
 )
 
@@ -40,3 +42,13 @@ class EventViewSet(ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+
+class NotificationViewSet(ModelViewSet):
+    """Вьюсет уведомлений."""
+
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Notification.objects.filter(user=user)

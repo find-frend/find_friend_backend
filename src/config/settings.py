@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "api.apps.ApiConfig",
     "users.apps.UsersConfig",
     "events.apps.EventsConfig",
+    "notifications",
 ]
 
 MIDDLEWARE = [

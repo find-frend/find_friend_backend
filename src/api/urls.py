@@ -3,7 +3,13 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import EventViewSet, FriendViewSet, MyUserViewSet, ProfileViewSet
+from .views import (
+    EventViewSet,
+    FriendViewSet,
+    MyUserViewSet,
+    NotificationViewSet,
+    ProfileViewSet,
+)
 
 app_name = "api"
 
@@ -13,6 +19,11 @@ router.register("users", MyUserViewSet, basename="users")
 router.register("profiles", ProfileViewSet, basename="profiles")
 router.register("events", EventViewSet, basename="events")
 router.register("friends", FriendViewSet, basename="friends")
+router.register(
+    "notifications",
+    NotificationViewSet,
+    basename="notifications"
+)
 
 
 urlpatterns = [
