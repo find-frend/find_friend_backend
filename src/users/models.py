@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
+from events.models import Interest
 
 from .utils import make_thumbnail
 
@@ -106,7 +107,7 @@ class Profile(models.Model):
         blank=True,
         null=True,
     )
-    interests = models.JSONField("Интересы", blank=False, default=list)
+    interests = models.ManyToManyField(Interest, through="ProfileInterest")
     city = models.CharField(
         "Место проживания",
         max_length=MAX_LENGTH_CHAR,
@@ -168,6 +169,35 @@ class Profile(models.Model):
         if self.avatar:
             self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
+
+
+class ProfileInterest(models.Model):
+    """Модель связи профиля и интересов."""
+
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    interest = models.ForeignKey(Interest, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        """Увеличение значения счетчика интереса."""
+        self.interest.counter += 1
+        self.interest.save()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "profile",
+                    "interest",
+                ],
+                name="unique_profile_interest",
+            )
+        ]
+        verbose_name = "Профиль-интерес"
+        verbose_name_plural = "Профили-интересы"
+
+    def __str__(self):
+        return f"{self.profile} - {self.interest}"
 
 
 class Friend(models.Model):
