@@ -2,7 +2,21 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
-from .models import Friend, Profile, User
+from .models import Friend, Interest, User
+
+
+@admin.register(Interest)
+class InterestAdmin(admin.ModelAdmin):
+    """Админка интересов."""
+
+    list_display = ("name",)
+
+
+class InterestInlineAdmin(admin.TabularInline):
+    """Админка связи пользователя и интересов."""
+
+    model = User.interests.through
+    extra = 0
 
 
 @admin.register(User)
@@ -22,8 +36,31 @@ class MyUserAdmin(UserAdmin):
         "is_staff",
         "is_active",
     )
+    basic_fields = (
+        "email",
+        "first_name",
+        "last_name",
+        "nickname",
+        "birthday",
+        "city",
+        "profession",
+        "character",
+        "sex",
+        "purpose",
+        "network_nick",
+        "additionally",
+    )
     fieldsets = (
-        (None, {"fields": ("email", "first_name", "last_name", "password")}),
+        (
+            None,
+            {
+                "fields": basic_fields
+                + (
+                    "preview",
+                    "password",
+                )
+            },
+        ),
         ("Permissions", {"fields": ("is_staff", "is_active")}),
     )
     add_fieldsets = (
@@ -31,10 +68,9 @@ class MyUserAdmin(UserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": (
-                    "email",
-                    "first_name",
-                    "last_name",
+                "fields": basic_fields
+                + (
+                    "avatar",
                     "password1",
                     "password2",
                     "is_staff",
@@ -43,46 +79,10 @@ class MyUserAdmin(UserAdmin):
             },
         ),
     )
-    search_fields = ("email",)
-    ordering = ("email",)
+    inlines = (InterestInlineAdmin,)
+    search_fields = ("email", "first_name", "last_name", "nickname")
+    ordering = ("-id",)
     empty_value_display = "-пусто-"
-
-
-@admin.register(Friend)
-class FriendAdmin(admin.ModelAdmin):
-    """Админка друга пользователя."""
-
-    list_display = (
-        "initiator",
-        "friend",
-        "is_added",
-    )
-
-
-@admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
-    """Админка профиля пользователя."""
-
-    model = Profile
-    list_display = (
-        "id",
-        "first_name",
-        "last_name",
-        "email",
-        "nickname",
-        "age",
-        "interests",
-        "city",
-        "preview",
-        "profession",
-        "character",
-        "sex",
-        "purpose",
-        "network_nick",
-        "additionally",
-    )
-    search_fields = ("nickname", "first_name", "last_name")
-    ordering = ("nickname",)
     readonly_fields = ["preview"]
 
     @admin.display(description="Фото профиля", empty_value="Нет фото")
@@ -94,3 +94,14 @@ class ProfileAdmin(admin.ModelAdmin):
                  style="max-height: 100px; max-width: 100px">'"""
             )
         return None
+
+
+@admin.register(Friend)
+class FriendAdmin(admin.ModelAdmin):
+    """Админка друга пользователя."""
+
+    list_display = (
+        "initiator",
+        "friend",
+        "is_added",
+    )

@@ -2,7 +2,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.serializers import ModelSerializer
 
 from events.models import Event
-from users.models import Friend, Profile, User
+from users.models import Friend, User
 
 
 class MyUserSerializer(UserSerializer):
@@ -15,6 +15,17 @@ class MyUserSerializer(UserSerializer):
             "email",
             "first_name",
             "last_name",
+            "nickname",
+            "birthday",
+            "interests",
+            "city",
+            "avatar",
+            "profession",
+            "character",
+            "sex",
+            "purpose",
+            "network_nick",
+            "additionally",
         )
 
 
@@ -26,31 +37,6 @@ class MyUserCreateSerializer(UserCreateSerializer):
         fields = tuple(User.REQUIRED_FIELDS) + (
             User.USERNAME_FIELD,
             "password",
-        )
-
-
-class ProfileSerializer(ModelSerializer):
-    """Сериализатор профиля пользователя."""
-
-    class Meta:
-        model = Profile
-        fields = (
-            "id",
-            "user",
-            "first_name",
-            "last_name",
-            "email",
-            "nickname",
-            "age",
-            "interests",
-            "city",
-            "avatar",
-            "profession",
-            "character",
-            "sex",
-            "purpose",
-            "network_nick",
-            "additionally",
         )
 
 
