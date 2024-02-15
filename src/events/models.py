@@ -10,10 +10,14 @@ class Interest(models.Model):
     name = models.CharField(
         max_length=MAX_LENGTH_CHAR, verbose_name="Название интереса"
     )
+    counter = models.PositiveIntegerField(
+        default=0, verbose_name="Счётчик популярности интереса"
+    )
 
     class Meta:
         verbose_name = "Интерес"
         verbose_name_plural = "Интересы"
+        ordering = ["-counter"]
 
     def __str__(self):
         return self.name
