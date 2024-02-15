@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -88,11 +89,25 @@ class Profile(models.Model):
         _("Фамилия"),
         max_length=MAX_LENGTH_CHAR,
         null=True,
+        validators=[
+            RegexValidator(
+                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
+                message='Last_name must be alphabetic',
+                code='invalid_user_last_name'
+            ),
+        ]
     )
     first_name = models.CharField(
         _("Имя"),
         max_length=MAX_LENGTH_CHAR,
         null=True,
+        validators=[
+            RegexValidator(
+                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
+                message='First_name must be alphabetic',
+                code='invalid_user_first_name'
+            ),
+        ]
     )
     nickname = models.SlugField(
         "Ник пользователя",
@@ -117,6 +132,7 @@ class Profile(models.Model):
     avatar = models.ImageField(
         "Аватарка",
         blank=True,
+        null=True,
         upload_to="images/profile/",
     )
     profession = models.CharField(
