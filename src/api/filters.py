@@ -7,11 +7,12 @@ from users.models import User
 class UserFilter(filters.FilterSet):
     """Класс фильтрации по интересам."""
 
-    interests = filters.AllValuesMultipleFilter(field_name='interests__name')
+    interests = filters.AllValuesMultipleFilter(field_name="interests__name")
 
     class Meta:
         model = User
-        fields = ["sex", "city", "interests", "profession"]
+        fields = ["sex", "city", "interests",
+                  "profession", "character", "purpose"]
 
 
 class UserSearchFilter(SearchFilter):
