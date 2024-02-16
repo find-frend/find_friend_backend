@@ -1,5 +1,8 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -53,10 +56,30 @@ class User(AbstractUser):
         unique=True,
     )
     first_name = models.CharField(
-        "Имя", max_length=MAX_LENGTH_CHAR, blank=False, null=False
+        "Имя",
+        max_length=MAX_LENGTH_CHAR,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
+                message='First_name must be alphabetic',
+                code='invalid_user_first_name'
+            ),
+        ]
     )
     last_name = models.CharField(
-        "Фамилия", max_length=MAX_LENGTH_CHAR, blank=False, null=False
+        "Фамилия",
+        max_length=MAX_LENGTH_CHAR,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
+                message='Last_name must be alphabetic',
+                code='invalid_user_last_name'
+            ),
+        ]
     )
     nickname = models.SlugField(
         "Ник пользователя",
@@ -132,6 +155,16 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def clean_fields(self, exclude=None):
+        """Валидация поля birthday."""
+        super().clean_fields(exclude=exclude)
+
+        now = timezone.now()
+        if self.birthday > now.date():
+            raise ValidationError('Birthday is greater than the current date')
+        if (now.year - self.birthday.year) > 120:
+            raise ValidationError('Age over 120 years!')
 
     def save(self, *args, **kwargs):
         """Сохранение аватара заданного размера."""
