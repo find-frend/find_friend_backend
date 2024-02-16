@@ -19,4 +19,5 @@ class UserSearchFilter(SearchFilter):
 
     def filter_queryset(self, request, queryset, view):
         name = request.query_params.get("name", "")
-        return queryset.filter(name__startswith=name) if name else queryset
+        return queryset.filter(
+            first_name__startswith=name) if name else queryset

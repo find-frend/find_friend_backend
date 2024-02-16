@@ -21,8 +21,8 @@ class MyUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = MyUserSerializer
     pagination_class = MyPagination
-    filter_backends = (DjangoFilterBackend, UserSearchFilter)
-    filterset_class = UserFilter
+    filter_backends = (UserSearchFilter, )
+    # filterset_class = UserFilter
 
 
 class ProfileViewSet(ModelViewSet):
