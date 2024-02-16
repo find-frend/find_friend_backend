@@ -37,6 +37,13 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     """Кастомная модель пользователя."""
 
+    MALE = "М"
+    FEMALE = "Ж"
+    sex_choices = (
+        (MALE, "Mужчина"),
+        (FEMALE, "Женщина"),
+    )
+
     username = None
     email = models.EmailField(
         "Электронная почта",
@@ -51,49 +58,6 @@ class User(AbstractUser):
     last_name = models.CharField(
         "Фамилия", max_length=MAX_LENGTH_CHAR, blank=False, null=False
     )
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
-
-    objects = CustomUserManager()
-
-    class Meta:
-        ordering = ["-id"]
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
-
-
-class Profile(models.Model):
-    """Модель профиля пользователя."""
-
-    MALE = "М"
-    FEMALE = "Ж"
-    sex_choices = (
-        (MALE, "Mужчина"),
-        (FEMALE, "Женщина"),
-    )
-
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        null=False,
-    )
-    # primary_key=True,)
-    email = models.EmailField(
-        _("Электронная почта"), max_length=MAX_LENGTH_EMAIL, unique=True
-    )
-    last_name = models.CharField(
-        _("Фамилия"),
-        max_length=MAX_LENGTH_CHAR,
-        null=True,
-    )
-    first_name = models.CharField(
-        _("Имя"),
-        max_length=MAX_LENGTH_CHAR,
-        null=True,
-    )
     nickname = models.SlugField(
         "Ник пользователя",
         max_length=MAX_LENGTH_CHAR,
@@ -101,23 +65,28 @@ class Profile(models.Model):
         blank=True,
         null=True,
     )
-    age = models.PositiveIntegerField(
-        "Возраст",
+    birthday = models.DateField(
+        "День рождения",
         blank=True,
         null=True,
     )
-    interests = models.JSONField("Интересы", blank=False, default=list)
+    interests = models.ManyToManyField(
+        "Interest",
+        through="UserInterest",
+        blank=True,
+        verbose_name="Интересы",
+        help_text="Интересы пользователя",
+    )
     city = models.CharField(
         "Место проживания",
         max_length=MAX_LENGTH_CHAR,
-        null=True,
         blank=True,
     )
     liked_list = models.JSONField(blank=True, default=list)
     avatar = models.ImageField(
         "Аватарка",
         blank=True,
-        upload_to="images/profile/",
+        upload_to="images/user/",
     )
     profession = models.CharField(
         "Профессия",
@@ -133,19 +102,17 @@ class Profile(models.Model):
         "Пол",
         max_length=1,
         choices=sex_choices,
-        default=FEMALE,
+        blank=True,
         help_text="Введите свой пол",
     )
     purpose = models.CharField(
         "Цель поиска друга",
         max_length=MAX_LENGTH_CHAR,
-        null=True,
         blank=True,
     )
     network_nick = models.CharField(
         "Ник в других соц.сетях",
         max_length=MAX_LENGTH_CHAR,
-        null=True,
         blank=True,
     )
     additionally = models.TextField(
@@ -153,15 +120,18 @@ class Profile(models.Model):
         max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
-    USERNAME_FIELD = "nickname"
-    REQUIRED_FIELDS = [interests]
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["first_name", "last_name"]
+
+    objects = CustomUserManager()
 
     class Meta:
-        verbose_name = "Профиль"
-        verbose_name_plural = "Профили"
+        ordering = ["-id"]
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
     def __str__(self):
-        return self.nickname
+        return f"{self.first_name} {self.last_name}"
 
     def save(self, *args, **kwargs):
         """Сохранение аватара заданного размера."""
@@ -170,14 +140,62 @@ class Profile(models.Model):
         super().save(*args, **kwargs)
 
 
+class Interest(models.Model):
+    """Модель интересов."""
+
+    name = models.CharField(
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название интереса"
+    )
+    counter = models.PositiveIntegerField(
+        default=0, verbose_name="Счётчик популярности интереса"
+    )
+
+    class Meta:
+        verbose_name = "Интерес"
+        verbose_name_plural = "Интересы"
+        ordering = ["-counter"]
+
+    def __str__(self):
+        return self.name
+
+
+class UserInterest(models.Model):
+    """Модель связи профиля и интересов."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    interest = models.ForeignKey(Interest, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        """Увеличение значения счетчика интереса."""
+        self.interest.counter += 1
+        self.interest.save()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "user",
+                    "interest",
+                ],
+                name="unique_user_interest",
+            )
+        ]
+        verbose_name = "Пользователь-интерес"
+        verbose_name_plural = "Пользователи-интересы"
+
+    def __str__(self):
+        return f"{self.user} - {self.interest}"
+
+
 class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, related_name="initiator"
+        User, on_delete=models.CASCADE, related_name="initiator"
     )
     friend = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, related_name="friend"
+        User, on_delete=models.CASCADE, related_name="friend"
     )
     is_added = models.BooleanField(default=False)
 

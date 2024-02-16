@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from events.models import Event
-from users.models import Friend, Profile, User
+from users.models import Friend, User
 
 from .pagination import MyPagination
 from .filters import UserFilter, UserSearchFilter

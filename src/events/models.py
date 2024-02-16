@@ -1,22 +1,7 @@
 from django.db import models
 
 from config.settings import MAX_LENGTH_CHAR
-from users.models import Profile
-
-
-class Interest(models.Model):
-    """Модель интересов."""
-
-    name = models.CharField(
-        max_length=MAX_LENGTH_CHAR, verbose_name="Название интереса"
-    )
-
-    class Meta:
-        verbose_name = "Интерес"
-        verbose_name_plural = "Интересы"
-
-    def __str__(self):
-        return self.name
+from users.models import Interest, User
 
 
 class Event(models.Model):
@@ -27,7 +12,10 @@ class Event(models.Model):
     )
     description = models.TextField(verbose_name="Описание мероприятия")
     interests = models.ManyToManyField(
-        Interest, verbose_name="Интересы мероприятия"
+        Interest,
+        through="EventInterest",
+        verbose_name="Интересы",
+        help_text="Интересы мероприятия",
     )
     event_type = models.CharField(
         max_length=MAX_LENGTH_CHAR, verbose_name="Тип мероприятия"
@@ -51,9 +39,16 @@ class Event(models.Model):
         return self.name
 
 
+class EventInterest(models.Model):
+    """Модель связи мероприятия и интересов."""
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    interest = models.ForeignKey(Interest, on_delete=models.CASCADE)
+
+
 class EventMember(models.Model):
     """Модель связи мероприятия и участников."""
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_organizer = models.BooleanField()
