@@ -3,14 +3,14 @@ from itertools import chain
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Event, EventMember, Interest
+from .models import Event, EventMember
 
 
-@admin.register(Interest)
-class InterestAdmin(admin.ModelAdmin):
-    """Админка интересов."""
+class InterestInlineAdmin(admin.TabularInline):
+    """Админка связи мероприятия и интересов."""
 
-    list_display = ("name",)
+    model = Event.interests.through
+    extra = 0
 
 
 @admin.register(Event)
@@ -21,7 +21,6 @@ class EventAdmin(admin.ModelAdmin):
         "name",
         "preview",
         "description",
-        "interest_names",
         "event_type",
         "date",
         "location",
@@ -30,8 +29,8 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = (
         "location",
         "name",
-        "interests",
     )
+    inlines = (InterestInlineAdmin,)
 
     @admin.display(description="Интересы")
     def interest_names(self, object):
@@ -57,6 +56,6 @@ class EventMemberAdmin(admin.ModelAdmin):
 
     list_display = (
         "event",
-        "profile",
+        "user",
         "is_organizer",
     )
