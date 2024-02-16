@@ -9,7 +9,7 @@ INTERESTS_FILE = Path(BASE_DIR / "data" / "interests.txt")
 
 def add_interests(apps, schema_editor):
     Interest = apps.get_model("users", "Interest")
-    with open(INTERESTS_FILE) as f:
+    with open(INTERESTS_FILE, encoding="utf-8") as f:
         interests = []
         for line in f:
             interest_name = line.strip()
@@ -20,7 +20,7 @@ def add_interests(apps, schema_editor):
 
 def remove_interests(apps, schema_editor):
     Interest = apps.get_model("users", "Interest")
-    with open(INTERESTS_FILE) as f:
+    with open(INTERESTS_FILE, encoding="utf-8") as f:
         for line in f:
             interest_name = line.strip()
             Interest.objects.filter(name=interest_name).delete()
