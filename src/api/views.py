@@ -7,7 +7,8 @@ from users.models import Friend, User
 
 from .pagination import MyPagination
 from .serializers import EventSerializer, FriendSerializer, MyUserSerializer
-from .filters import UserFilter, UserSearchFilter
+from .filters import (UserFilter, EventsFilter,
+                      UserSearchFilter, EventSearchFilter)
 
 
 class MyUserViewSet(UserViewSet):
@@ -32,3 +33,5 @@ class EventViewSet(ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    filter_backends = (EventSearchFilter, DjangoFilterBackend)
+    filterset_class = EventsFilter
