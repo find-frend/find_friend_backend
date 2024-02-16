@@ -1,10 +1,12 @@
 from djoser.views import UserViewSet
 from rest_framework.viewsets import ModelViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 
 from events.models import Event
 from users.models import Friend, Profile, User
 
 from .pagination import MyPagination
+from .filters import UserFilter, UserSearchFilter
 from .serializers import (
     EventSerializer,
     FriendSerializer,
@@ -19,6 +21,8 @@ class MyUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = MyUserSerializer
     pagination_class = MyPagination
+    filter_backends = (DjangoFilterBackend, UserSearchFilter)
+    filterset_class = UserFilter
 
 
 class ProfileViewSet(ModelViewSet):
