@@ -21,7 +21,6 @@ class MyUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = MyUserSerializer
     pagination_class = MyPagination
-    # filterset_class = UserFilter
 
 
 class ProfileViewSet(ModelViewSet):
@@ -29,7 +28,8 @@ class ProfileViewSet(ModelViewSet):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    filter_backends = (UserSearchFilter, )
+    filter_backends = (UserSearchFilter, DjangoFilterBackend)
+    filterset_class = UserFilter
 
 
 class FriendViewSet(ModelViewSet):
