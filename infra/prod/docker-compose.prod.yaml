@@ -1,14 +1,16 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:16.1-alpine
-    volumes:
-      - db_data:/var/lib/postgresql/data/
-    ports:
-      - "5432:5432"
-    env_file:
-      - ../../.env
+  # db:
+  #   image: postgres:16.1-alpine
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data/
+  #   ports:
+  #     - "5432:5432"
+  #   env_file:
+  #     - ../../.env
+  #   networks:
+  #     - app_net
 
   backend:
     build: ../../.
@@ -20,6 +22,8 @@ services:
       - db
     env_file:
       - ../../.env
+    networks:
+      - app_net
 
   nginx:
     image: nginx:1.25.3-alpine
@@ -32,6 +36,12 @@ services:
       - media_value:/var/html/media/
     depends_on:
       - backend
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    external: true
 
 volumes:
   db_data:
