@@ -24,6 +24,7 @@ class EventAdmin(admin.ModelAdmin):
         "event_type",
         "date",
         "location",
+        "event_price",
     )
     search_fields = ("name",)
     list_filter = (

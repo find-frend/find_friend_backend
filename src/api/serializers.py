@@ -101,6 +101,7 @@ class EventSerializer(ModelSerializer):
             "event_type",
             "date",
             "location",
+            "event_price",
             "image",
         )
 
