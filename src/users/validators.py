@@ -5,8 +5,8 @@ from django.utils import timezone
 def validate_birthday(birthday):
 
     now = timezone.now()
-    if birthday > now.date():
-        raise ValidationError('Birthday is greater than the current date')
+    if (now.year - birthday.year) < 14:
+        raise ValidationError('Указанный возраст меньше 14 лет! Проверьте дату рождения.')
     if (now.year - birthday.year) > 120:
-        raise ValidationError('Age over 120 years!')
+        raise ValidationError('Возраст больше 120 лет! Проверьте дату рождения.')
     return birthday

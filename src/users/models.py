@@ -61,9 +61,9 @@ class User(AbstractUser):
         null=False,
         validators=[
             RegexValidator(
-                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
-                message='First_name must be alphabetic',
-                code='invalid_user_first_name'
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+\-?[а-яА-ЯёЁa-zA-Z]+$",
+                message="Имя может содержать только буквы и дефис",
+                code="invalid_user_first_name"
             ),
         ]
     )
@@ -74,9 +74,9 @@ class User(AbstractUser):
         null=False,
         validators=[
             RegexValidator(
-                regex='^[а-яА-ЯёЁa-zA-Z-]+$',
-                message='Last_name must be alphabetic',
-                code='invalid_user_last_name'
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+\-?[а-яА-ЯёЁa-zA-Z]+$",
+                message="Фамилия может содержать только буквы и дефис",
+                code="invalid_user_last_name"
             ),
         ]
     )
