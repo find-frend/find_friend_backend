@@ -2,7 +2,14 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
-from .models import Friend, Interest, User
+from .models import City, Friend, Interest, User
+
+
+@admin.site.register(City)
+class CityAdmin(admin.ModelAdmin):
+    """Админка городов."""
+
+    list_display = ("name",)
 
 
 @admin.register(Interest)
