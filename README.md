@@ -1,4 +1,4 @@
-![workflow](https://github.com/find-frend/find_friend_backend/actions/workflow/find_friend_workflow.yml/badge.svg)
+![workflow](https://github.com/find-frend/find_friend_backend/actions/workflows/find_friend_workflow.yml/badge.svg)
 
 # Бэкенд приложения "Найди друга"
 
