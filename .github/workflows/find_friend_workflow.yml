@@ -84,6 +84,7 @@ jobs:
             cd build/
             rm -f .env
             cd infra/prod/
-            docker-compose rm -fsv
-            docker rmi $(docker images -aq)
-            docker-compose up -d
+            #docker-compose rm -fsv
+            #docker rmi $(docker images -aq)
+            docker compose -f .docker-compose.prod.yaml up -d --build --force-recreate
+            #docker-compose up -d
