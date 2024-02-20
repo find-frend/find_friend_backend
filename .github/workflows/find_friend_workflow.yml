@@ -94,5 +94,5 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             cd infra/prod/
             docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
-            docker exec -it prod-backend-1 python manage.py migrate
-            docker exec -it prod-backend-1 python manage.py collectstatic --no-input
+            docker exec -i prod-backend-1 python manage.py migrate
+            docker exec -i prod-backend-1 python manage.py collectstatic --no-input
