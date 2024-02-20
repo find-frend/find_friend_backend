@@ -1,0 +1,541 @@
+swagger: '2.0'
+info:
+  title: API для приложения "Найди друга"
+  description: Документация для приложения "Найди друга"
+  version: v1
+host: 127.0.0.1:8000
+schemes:
+  - http
+basePath: /api/v1
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+  - Basic: []
+paths:
+  /auth/token/login/:
+    post:
+      operationId: auth_token_login_create
+      description: Use this endpoint to obtain user authentication token.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TokenCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TokenCreate'
+      tags:
+        - auth
+    parameters: []
+  /auth/token/logout/:
+    post:
+      operationId: auth_token_logout_create
+      description: Use this endpoint to logout user (remove user authentication token).
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - auth
+    parameters: []
+  /users/:
+    get:
+      operationId: users_list
+      description: Вьюсет пользователя.
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    post:
+      operationId: users_create
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUserCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUserCreate'
+      tags:
+        - users
+    parameters: []
+  /users/activation/:
+    post:
+      operationId: users_activation
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Activation'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Activation'
+      tags:
+        - users
+    parameters: []
+  /users/me/:
+    get:
+      operationId: users_me_read
+      description: Вьюсет пользователя.
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    put:
+      operationId: users_me_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    patch:
+      operationId: users_me_partial_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    delete:
+      operationId: users_me_delete
+      description: Вьюсет пользователя.
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - users
+    parameters: []
+  /users/resend_activation/:
+    post:
+      operationId: users_resend_activation
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_email/:
+    post:
+      operationId: users_reset_username
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_email_confirm/:
+    post:
+      operationId: users_reset_username_confirm
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UsernameResetConfirm'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/UsernameResetConfirm'
+      tags:
+        - users
+    parameters: []
+  /users/reset_password/:
+    post:
+      operationId: users_reset_password
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SendEmailReset'
+      tags:
+        - users
+    parameters: []
+  /users/reset_password_confirm/:
+    post:
+      operationId: users_reset_password_confirm
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordResetConfirm'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/PasswordResetConfirm'
+      tags:
+        - users
+    parameters: []
+  /users/set_email/:
+    post:
+      operationId: users_set_username
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetUsername'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SetUsername'
+      tags:
+        - users
+    parameters: []
+  /users/set_password/:
+    post:
+      operationId: users_set_password
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetPassword'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/SetPassword'
+      tags:
+        - users
+    parameters: []
+  /users/{id}/:
+    get:
+      operationId: users_read
+      description: Вьюсет пользователя.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    put:
+      operationId: users_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    patch:
+      operationId: users_partial_update
+      description: Вьюсет пользователя.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MyUser'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/MyUser'
+      tags:
+        - users
+    delete:
+      operationId: users_delete
+      description: Вьюсет пользователя.
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - users
+    parameters:
+      - name: id
+        in: path
+        description: A unique integer value identifying this Пользователи.
+        required: true
+        type: integer
+definitions:
+  TokenCreate:
+    type: object
+    properties:
+      password:
+        title: Password
+        type: string
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        minLength: 1
+  MyUser:
+    required:
+      - email
+      - first_name
+      - last_name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+      first_name:
+        title: Имя
+        type: string
+        maxLength: 158
+        minLength: 1
+      last_name:
+        title: Фамилия
+        type: string
+        maxLength: 150
+        minLength: 1
+  MyUserCreate:
+    required:
+      - first_name
+      - last_name
+      - email
+      - password
+    type: object
+    properties:
+      first_name:
+        title: Имя
+        type: string
+        maxLength: 158
+        minLength: 1
+      last_name:
+        title: Фамилия
+        type: string
+        maxLength: 150
+        minLength: 1
+      email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  Activation:
+    required:
+      - uid
+      - token
+    type: object
+    properties:
+      uid:
+        title: Uid
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: string
+        minLength: 1
+  SendEmailReset:
+    required:
+      - email
+    type: object
+    properties:
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+  UsernameResetConfirm:
+    required:
+      - new_email
+    type: object
+    properties:
+      new_email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+  PasswordResetConfirm:
+    required:
+      - uid
+      - token
+      - new_password
+    type: object
+    properties:
+      uid:
+        title: Uid
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: string
+        minLength: 1
+      new_password:
+        title: New password
+        type: string
+        minLength: 1
+  SetUsername:
+    required:
+      - current_password
+      - new_email
+    type: object
+    properties:
+      current_password:
+        title: Current password
+        type: string
+        minLength: 1
+      new_email:
+        title: Электронная почта
+        type: string
+        format: email
+        maxLength: 254
+        minLength: 1
+  SetPassword:
+    required:
+      - new_password
+      - current_password
+    type: object
+    properties:
+      new_password:
+        title: New password
+        type: string
+        minLength: 1
+      current_password:
+        title: Current password
+        type: string
+        minLength: 1
