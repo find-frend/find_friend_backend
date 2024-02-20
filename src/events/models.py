@@ -13,11 +13,18 @@ class Event(models.Model):
         max_length=MAX_LENGTH_EVENT, verbose_name="Название мероприятия"
     )
     description = models.TextField(verbose_name="Описание мероприятия")
-    interests = models.ManyToManyField(
+    '''    interests = models.ManyToManyField(
         Interest,
         through="EventInterest",
         verbose_name="Интересы",
         help_text="Интересы мероприятия",
+    )
+    '''
+    members = models.ManyToManyField(
+        User,
+        through="EventMember",
+        verbose_name="Участники",
+        help_text="Участники мероприятия",
     )
     event_type = models.CharField(
         max_length=MAX_LENGTH_EVENT, verbose_name="Тип мероприятия"
@@ -64,3 +71,12 @@ class EventMember(models.Model):
     class Meta:
         verbose_name = "Участники мероприятия"
         verbose_name_plural = "Участники мероприятия"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "event",
+                    "user",
+                ],
+                name="unique_member",
+            )
+        ]
