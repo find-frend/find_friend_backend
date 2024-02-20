@@ -83,7 +83,6 @@ jobs:
             rm deploy.tar
             cd build/
             rm -f .env
-            echo TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} >> .env
             cd infra/
             docker-compose rm -fsv
             docker rmi $(docker images -aq)
