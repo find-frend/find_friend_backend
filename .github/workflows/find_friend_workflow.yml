@@ -82,7 +82,7 @@ jobs:
             tar -xvf deploy.tar
             rm deploy.tar
             cd build/
-            rm -f .env
+            # rm -f .env
             cd infra/prod/
             #docker-compose rm -fsv
             #docker rmi $(docker images -aq)
