@@ -82,7 +82,6 @@ jobs:
             tar -xvf deploy.tar
             rm deploy.tar
             cd build/
-            # rm -f .env
             rm -f .env
             touch .env
             echo DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} >> .env
@@ -94,7 +93,6 @@ jobs:
             echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             cd infra/prod/
-            #docker-compose rm -fsv
-            #docker rmi $(docker images -aq)
             docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
-            #docker-compose up -d
+            docker exec -it prod-backend-1 python manage.py migrate
+            docker exec -it prod-backend-1 python manage.py collectstatic --no-input
