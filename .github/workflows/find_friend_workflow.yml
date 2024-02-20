@@ -83,6 +83,15 @@ jobs:
             rm deploy.tar
             cd build/
             # rm -f .env
+            rm -f .env
+            touch .env
+            echo DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} >> .env
+            echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
+            echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+            echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             cd infra/prod/
             #docker-compose rm -fsv
             #docker rmi $(docker images -aq)
