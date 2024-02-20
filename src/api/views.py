@@ -19,7 +19,7 @@ class MyUserViewSet(UserViewSet):
     pagination_class = MyPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = UserFilter
-    search_fields = ('first_name', 'last_name')
+    search_fields = ['first_name', 'last_name']
 
 
 class FriendViewSet(ModelViewSet):
