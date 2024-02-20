@@ -1,75 +1,90 @@
 name: find friend workflow
 
-on: [push]
+# Workflow будет срабатывать на команду push в ветку develop
+# После тестирования изменим на main
+on:
+  push:
+    branches: [ develop ]
 
+# После срабатывания "on" выполнятся следующие действия:
 jobs:
+  # Проверяем код в папке src/ с помощью flake8
   tests:
+    name: Code test
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.7
+        python-version: 3.11
 
     - name: Install dependencies
-      run: | 
-        python -m pip install --upgrade pip 
-        pip install flake8 flake8-broken-line
-        cd backend/
-        pip install -r requirements.txt 
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort mypy
+        pip install -r requirements.txt
 
-    - name: Lint with flake8
-      run: python -m flake8
+    - name: Test with flake8
+      run: |
+        cd src/
+        python -m flake8
 
-  build_and_push_backend_to_docker_hub:
-    if: github.ref == 'refs/heads/main'
-    name: Push backend image to Docker Hub
+  # Создаем архив проекта и копируем его на сервер
+  copy_project_on_server:
+    name: Copy project on server
     runs-on: ubuntu-latest
     needs: tests
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1 
-      - name: Login to Docker 
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Push to Docker Hub
-        uses: docker/build-push-action@v3 
-        with:
-          context: backend
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/find_friend_backend:latest
-  
-  deploy:
-    name: Deploying on remote server
-    runs-on: ubuntu-latest
-    needs:
-    - tests
-    - build_and_push_backend_to_docker_hub
-    steps:
-    - name: executing remote ssh commands to deploy
-      uses: appleboy/ssh-action@master
+    - uses: actions/checkout@v3
+    - name: Create archive with project
+      run: |
+        mkdir ../build
+        cp -TR . ../build
+        tar -cvf deploy.tar ../build/
+
+    - name: Copy archive on server
+      uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
-        script: |
-          sudo rm -f .env
-          touch .env
-          sudo docker compose down
-          sudo docker rmi esperansa/find_friend_backend:latest
-          sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
-          sudo echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
-          sudo echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
-          sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
-          sudo echo DB_HOST=${{ secrets.DB_HOST }} >> .env
-          sudo echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-          sudo docker pull esperansa/foodgram-frontend:latest
-          sudo docker pull esperansa/foodgram-backend:latest
-          sudo docker compose up -d --build
+        source: "deploy.tar"
+        target: "/home/${{ secrets.USER }}/"
+
+  # Распаковываем архив и через docker-compose собираем
+  # и запускаем контейнер с бэкендом
+  deploy:
+    name: Deploying on remote server
+    runs-on: ubuntu-latest
+    needs: copy_project_on_server
+    # На Этапе разработки стоит условие, что push должен осуществляться в ветку develop
+    # После тестирования необходимо поменять на main
+    if: github.ref_name == 'develop'
+    steps:
+      - name: Run bot in docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          # Заходим в домашнюю директорию. В ней находится архив.
+          # Распакуем архив. После распаковки удалим его.
+          # Заходим в директорию с проектом.
+          # Если в директории оказался .env файл - удаляем его.
+          # Создаем .env файл
+          # Заходим в директорию с docker-compose.yaml.
+          # Останавливаем работающие контейнеры и удаляем их.
+          # Удаляем все имеющиеся на сервере docker-образы.
+          # Запускаем docker-compose в фоновом режиме.
+          script: |
+            cd /home/${{ secrets.USER }}/
+            tar -xvf deploy.tar
+            rm deploy.tar
+            cd build/
+            rm -f .env
+            echo TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} >> .env
+            cd infra/
+            docker-compose rm -fsv
+            docker rmi $(docker images -aq)
+            docker-compose up -d
