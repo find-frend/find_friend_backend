@@ -32,8 +32,8 @@ class Event(models.Model):
     event_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name="Стоимость мероприятия"
+        default=Decimal("0.00"),
+        verbose_name="Стоимость мероприятия",
     )
     date = models.DateTimeField(
         verbose_name="Дата мероприятия",
@@ -69,6 +69,8 @@ class EventMember(models.Model):
     is_organizer = models.BooleanField()
 
     class Meta:
+        verbose_name = "Участники мероприятия"
+        verbose_name_plural = "Участники мероприятия"
         constraints = [
             models.UniqueConstraint(
                 fields=[
