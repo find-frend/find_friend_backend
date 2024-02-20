@@ -2,6 +2,7 @@ asgiref==3.7.2
 cfgv==3.4.0
 distlib==0.3.8
 Django==5.0.2
+django-filter==23.5
 djangorestframework==3.14.0
 djangorestframework-simplejwt==4.8.0
 djoser==2.1.0

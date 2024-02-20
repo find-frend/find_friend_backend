@@ -9,7 +9,6 @@ def make_thumbnail(image, size=(100, 100)):
     im = Image.open(image)
     if im.mode in ("RGBA", "P"):
         im = im.convert("RGB")
-    # im.convert("RGB")
     im.thumbnail(size)
     thumb_io = BytesIO()
     im.save(thumb_io, "JPEG", quality=85)
