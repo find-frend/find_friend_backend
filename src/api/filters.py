@@ -16,15 +16,6 @@ class UserFilter(filters.FilterSet):
                   "profession", "character", "purpose"]
 
 
-class UserSearchFilter(SearchFilter):
-    """Класс поиска по имени пользователя."""
-
-    def filter_queryset(self, request, queryset, view):
-        name = request.query_params.get("name", "")
-        return queryset.filter(
-            first_name__startswith=name) if name else queryset
-
-
 class EventsFilter(filters.FilterSet):
     """Класс фильтрации мероприятий по интересам."""
 
