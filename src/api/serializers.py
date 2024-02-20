@@ -97,7 +97,7 @@ class EventSerializer(ModelSerializer):
             "id",
             "name",
             "description",
-            # "interests",
+            "interests",
             "members",
             "event_type",
             "date",

@@ -1,4 +1,5 @@
-![workflow](https://github.com/find-frend/find_friend_backend/actions/runs/7975527316/workflow/find_friend_workflow.yml/badge.svg)
+![workflow](https://github.com/find-frend/find_friend_backend/actions/workflow/find_friend_workflow.yml/badge.svg)
+
 # Бэкенд приложения "Найди друга"
 
 Знакомства с новыми людьми, поиск людей с общими интересами и организация совместных мероприятий
