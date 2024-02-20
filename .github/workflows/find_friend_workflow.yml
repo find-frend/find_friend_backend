@@ -83,7 +83,7 @@ jobs:
             rm deploy.tar
             cd build/
             rm -f .env
-            cd infra/
+            cd infra/prod/
             docker-compose rm -fsv
             docker rmi $(docker images -aq)
             docker-compose up -d
