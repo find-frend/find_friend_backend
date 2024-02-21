@@ -46,9 +46,7 @@ class MyUserSerializer(UserSerializer):
         )
 
     def update(self, instance, validated_data):
-        """
-        Обновление пользователя с указанными интересами и городом.
-        """
+        """Обновление пользователя с указанными интересами и городом."""
         interests = validated_data.pop("interests", None)
         if not instance:
             instance = User.objects.create(**validated_data)
