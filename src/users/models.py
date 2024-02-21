@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -164,6 +166,18 @@ class User(AbstractUser):
         if self.avatar:
             self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
+
+    def age(self):
+        """Вычисление возраста пользователя."""
+        today = date.today()
+        return (
+            today.year
+            - self.birthday.year
+            - (
+                (today.month, today.day)
+                < (self.birthday.month, self.birthday.day)
+            )
+        )
 
 
 class Interest(models.Model):

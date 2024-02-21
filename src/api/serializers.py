@@ -1,4 +1,5 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
@@ -25,22 +26,23 @@ class MyUserSerializer(UserSerializer):
         allow_null=True,
     )
     interests = InterestSerializer(many=True)
+    age = serializers.IntegerField()
 
     class Meta:
         model = User
         fields = (
             "id",
-            "email",
             "first_name",
             "last_name",
-            "nickname",
-            "birthday",
+            "sex",
+            "age",
+            # "email",
+            "interests",
             "city",
             "interests",
             "avatar",
             "profession",
             "character",
-            "sex",
             "purpose",
             "network_nick",
             "additionally",

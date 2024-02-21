@@ -36,6 +36,7 @@ class MyUserAdmin(UserAdmin):
         "email",
         "first_name",
         "last_name",
+        # "age",
         "is_staff",
     )
     list_filter = (
