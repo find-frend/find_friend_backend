@@ -195,7 +195,7 @@ class City(models.Model):
     """Модель городов."""
 
     name = models.CharField(
-        max_length=MAX_LENGTH_CHAR, verbose_name="Название города"
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
     )
 
     class Meta:

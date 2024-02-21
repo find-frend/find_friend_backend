@@ -5,11 +5,11 @@ from django.utils.safestring import mark_safe
 from .models import City, Friend, Interest, User
 
 
-@admin.site.register(City)
+@admin.register(City)
 class CityAdmin(admin.ModelAdmin):
     """Админка городов."""
 
-    list_display = ("name",)
+    list_display = ("id", "name")
 
 
 @admin.register(Interest)
