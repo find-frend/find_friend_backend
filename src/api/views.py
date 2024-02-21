@@ -7,7 +7,8 @@ from events.models import Event
 from users.models import Friend, User
 
 from .filters import EventSearchFilter, EventsFilter, UserFilter
-from .pagination import MyPagination
+from .pagination import MyPagination, EventPagination
+
 from .serializers import EventSerializer, FriendSerializer, MyUserSerializer
 
 
@@ -27,6 +28,7 @@ class FriendViewSet(ModelViewSet):
 
     queryset = Friend.objects.all()
     serializer_class = FriendSerializer
+    pagination_class = MyPagination
 
 
 class EventViewSet(ModelViewSet):
@@ -36,3 +38,5 @@ class EventViewSet(ModelViewSet):
     serializer_class = EventSerializer
     filter_backends = (EventSearchFilter, DjangoFilterBackend)
     filterset_class = EventsFilter
+    pagination_class = EventPagination
+
