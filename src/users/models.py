@@ -1,11 +1,13 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
 
 from .utils import make_thumbnail
+from .validators import validate_birthday
 
 
 class CustomUserManager(BaseUserManager):
@@ -53,10 +55,30 @@ class User(AbstractUser):
         unique=True,
     )
     first_name = models.CharField(
-        "Имя", max_length=MAX_LENGTH_CHAR, blank=False, null=False
+        "Имя",
+        max_length=MAX_LENGTH_CHAR,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Имя может содержать только буквы, пробел и дефис",
+                code="invalid_user_first_name",
+            ),
+        ],
     )
     last_name = models.CharField(
-        "Фамилия", max_length=MAX_LENGTH_CHAR, blank=False, null=False
+        "Фамилия",
+        max_length=MAX_LENGTH_CHAR,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Фамилия может содержать только буквы, пробел и дефис",
+                code="invalid_user_last_name",
+            ),
+        ],
     )
     nickname = models.SlugField(
         "Ник пользователя",
@@ -69,6 +91,7 @@ class User(AbstractUser):
         "День рождения",
         blank=True,
         null=True,
+        validators=[validate_birthday],
     )
     interests = models.ManyToManyField(
         "Interest",

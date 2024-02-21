@@ -56,6 +56,7 @@ class MyUserAdmin(UserAdmin):
         "purpose",
         "network_nick",
         "additionally",
+        "avatar",
     )
     fieldsets = (
         (
@@ -77,7 +78,7 @@ class MyUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": basic_fields
                 + (
-                    "avatar",
+                    # "avatar",
                     "password1",
                     "password2",
                     "is_staff",
@@ -97,8 +98,8 @@ class MyUserAdmin(UserAdmin):
         """Отображение аватара профиля."""
         if obj.avatar:
             return mark_safe(
-                f"""<img src='{obj.avatar.url}'
-                 style="max-height: 100px; max-width: 100px">'"""
+                f'<img src="{obj.avatar.url}" '
+                'style="max-height: 100px; max-width: 100px">'
             )
         return None
 
