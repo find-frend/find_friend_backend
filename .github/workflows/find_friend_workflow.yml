@@ -4,7 +4,7 @@ name: find friend workflow
 # После тестирования изменим на main
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
 
 # После срабатывания "on" выполнятся следующие действия:
 jobs:
@@ -60,7 +60,7 @@ jobs:
     needs: copy_project_on_server
     # На Этапе разработки стоит условие, что push должен осуществляться в ветку develop
     # После тестирования необходимо поменять на main
-    if: github.ref_name == 'develop'
+    if: github.ref_name == 'main'
     steps:
       - name: Run bot in docker
         uses: appleboy/ssh-action@master
