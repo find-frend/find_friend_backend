@@ -61,8 +61,8 @@ class User(AbstractUser):
         null=False,
         validators=[
             RegexValidator(
-                regex=r"^[а-яА-ЯёЁa-zA-Z]+\-?[а-яА-ЯёЁa-zA-Z]+$",
-                message="Имя может содержать только буквы и дефис",
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Имя может содержать только буквы, пробел и дефис",
                 code="invalid_user_first_name"
             ),
         ]
@@ -74,8 +74,8 @@ class User(AbstractUser):
         null=False,
         validators=[
             RegexValidator(
-                regex=r"^[а-яА-ЯёЁa-zA-Z]+\-?[а-яА-ЯёЁa-zA-Z]+$",
-                message="Фамилия может содержать только буквы и дефис",
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Фамилия может содержать только буквы, пробел и дефис",
                 code="invalid_user_last_name"
             ),
         ]
