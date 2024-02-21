@@ -1,9 +1,11 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
+from rest_framework.exceptions import ValidationError
+from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
+# from events.models import EventInterest
 from events.models import Event, EventMember
-from users.models import Friend, Interest, User, UserInterest
+from users.models import City, Friend, Interest, User, UserInterest
 
 
 class InterestSerializer(ModelSerializer):
@@ -17,6 +19,12 @@ class InterestSerializer(ModelSerializer):
 class MyUserSerializer(UserSerializer):
     """Сериализатор пользователя."""
 
+    city = SlugRelatedField(
+        slug_field="name",
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     interests = InterestSerializer(many=True)
     age = serializers.IntegerField()
 
@@ -31,6 +39,7 @@ class MyUserSerializer(UserSerializer):
             # "email",
             "interests",
             "city",
+            "interests",
             "avatar",
             "profession",
             "character",
@@ -39,27 +48,23 @@ class MyUserSerializer(UserSerializer):
             "additionally",
         )
 
-    def create(self, validated_data):
-        """Создание пользователя с указанными интересами."""
-        if "interests" not in self.initial_data:
-            return User.objects.create(**validated_data)
-        interests = validated_data.pop("interests")
-        user = User.objects.create(**validated_data)
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            UserInterest.objects.create(user=user, interest=current_interest)
-        return user
-
     def update(self, instance, validated_data):
-        """Обновление пользователя с указанными интересами."""
-        if "interests" not in self.initial_data:
-            return super().update(instance, validated_data)
-        interests = validated_data.pop("interests")
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            UserInterest.objects.create(
-                user=instance, interest=current_interest
-            )
+        """Обновление пользователя с указанными интересами и городом."""
+        interests = validated_data.pop("interests", None)
+        if not instance:
+            instance = User.objects.create(**validated_data)
+        if interests:
+            for interest in interests:
+                try:
+                    current_interest = Interest.objects.get(**interest)
+                except Interest.DoesNotExist:
+                    raise ValidationError(
+                        "Пожалуйста, выберите интересы из списка "
+                        "предустановленных."
+                    )
+                UserInterest.objects.update_or_create(
+                    user=instance, interest=current_interest
+                )
         return super().update(instance, validated_data)
 
 

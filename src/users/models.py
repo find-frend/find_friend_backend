@@ -102,10 +102,13 @@ class User(AbstractUser):
         verbose_name="Интересы",
         help_text="Интересы пользователя",
     )
-    city = models.CharField(
-        "Место проживания",
-        max_length=MAX_LENGTH_CHAR,
+    city = models.ForeignKey(
+        "City",
+        on_delete=models.SET_NULL,
         blank=True,
+        null=True,
+        verbose_name="Город",
+        help_text="Город проживания",
     )
     liked_list = models.JSONField(blank=True, default=list)
     avatar = models.ImageField(
@@ -223,6 +226,22 @@ class UserInterest(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.interest}"
+
+
+class City(models.Model):
+    """Модель городов."""
+
+    name = models.CharField(
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
+    )
+
+    class Meta:
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class Friend(models.Model):
