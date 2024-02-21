@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -63,9 +65,9 @@ class User(AbstractUser):
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
                 message="Имя может содержать только буквы, пробел и дефис",
-                code="invalid_user_first_name"
+                code="invalid_user_first_name",
             ),
-        ]
+        ],
     )
     last_name = models.CharField(
         "Фамилия",
@@ -76,9 +78,9 @@ class User(AbstractUser):
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
                 message="Фамилия может содержать только буквы, пробел и дефис",
-                code="invalid_user_last_name"
+                code="invalid_user_last_name",
             ),
-        ]
+        ],
     )
     nickname = models.SlugField(
         "Ник пользователя",
@@ -161,6 +163,18 @@ class User(AbstractUser):
         if self.avatar:
             self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
+
+    def age(self):
+        """Вычисление возраста пользователя."""
+        today = date.today()
+        return (
+            today.year
+            - self.birthday.year
+            - (
+                (today.month, today.day)
+                < (self.birthday.month, self.birthday.day)
+            )
+        )
 
 
 class Interest(models.Model):

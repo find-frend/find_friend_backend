@@ -1,4 +1,5 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 from events.models import Event, EventMember
@@ -17,22 +18,22 @@ class MyUserSerializer(UserSerializer):
     """Сериализатор пользователя."""
 
     interests = InterestSerializer(many=True)
+    age = serializers.IntegerField()
 
     class Meta:
         model = User
         fields = (
             "id",
-            "email",
             "first_name",
             "last_name",
-            "nickname",
-            "birthday",
+            "sex",
+            "age",
+            # "email",
             "interests",
             "city",
             "avatar",
             "profession",
             "character",
-            "sex",
             "purpose",
             "network_nick",
             "additionally",
@@ -70,7 +71,7 @@ class MyUserCreateSerializer(UserCreateSerializer):
         fields = tuple(User.REQUIRED_FIELDS) + (
             User.USERNAME_FIELD,
             "password",
-            "birthday"
+            "birthday",
         )
 
 
@@ -142,9 +143,7 @@ class EventSerializer(ModelSerializer):
         event = Event.objects.create(**validated_data)
         for member in members:
             current_member = User.objects.get(**member)
-            EventMember.objects.create(
-                event=event, member=current_member
-            )
+            EventMember.objects.create(event=event, member=current_member)
         return event
 
     def update(self, instance, validated_data):
@@ -153,7 +152,5 @@ class EventSerializer(ModelSerializer):
             members = validated_data.pop("members")
         for member in members:
             current_member = User.objects.get(**member)
-            EventMember.objects.create(
-                event=instance, member=current_member
-            )
+            EventMember.objects.create(event=instance, member=current_member)
         return super().update(instance, validated_data)
