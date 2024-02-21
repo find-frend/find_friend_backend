@@ -1,7 +1,7 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.serializers import ModelSerializer
 
-from events.models import Event, EventInterest
+from events.models import Event, EventMember
 from users.models import Friend, Interest, User, UserInterest
 
 
@@ -70,6 +70,7 @@ class MyUserCreateSerializer(UserCreateSerializer):
         fields = tuple(User.REQUIRED_FIELDS) + (
             User.USERNAME_FIELD,
             "password",
+            "birthday"
         )
 
 
@@ -98,12 +99,15 @@ class EventSerializer(ModelSerializer):
             "name",
             "description",
             "interests",
+            "members",
             "event_type",
             "date",
             "location",
+            "event_price",
             "image",
         )
 
+    '''
     def create(self, validated_data):
         """Создание мероприятия с указанными интересами."""
         if "interests" not in self.initial_data:
@@ -126,5 +130,30 @@ class EventSerializer(ModelSerializer):
             current_interest = Interest.objects.get(**interest)
             EventInterest.objects.create(
                 event=instance, interest=current_interest
+            )
+        return super().update(instance, validated_data)
+    '''
+
+    def create(self, validated_data):
+        """Создание мероприятия с указанными участниками."""
+        if "members" not in self.initial_data:
+            return Event.objects.create(**validated_data)
+        members = validated_data.pop("members")
+        event = Event.objects.create(**validated_data)
+        for member in members:
+            current_member = User.objects.get(**member)
+            EventMember.objects.create(
+                event=event, member=current_member
+            )
+        return event
+
+    def update(self, instance, validated_data):
+        """Обновление мероприятия с указанными участниками."""
+        if "members" not in self.initial_data:
+            members = validated_data.pop("members")
+        for member in members:
+            current_member = User.objects.get(**member)
+            EventMember.objects.create(
+                event=instance, member=current_member
             )
         return super().update(instance, validated_data)
