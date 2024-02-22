@@ -17,7 +17,6 @@ class UserFilter(filters.FilterSet):
             "city",
             "interests",
             "profession",
-            "character",
             "purpose",
         ]
 

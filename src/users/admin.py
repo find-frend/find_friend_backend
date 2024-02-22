@@ -19,6 +19,14 @@ class InterestInlineAdmin(admin.TabularInline):
     extra = 0
 
 
+class FriendInlineAdmin(admin.TabularInline):
+    """Админка связи пользователя и друзей."""
+
+    fk_name = "initiator"
+    model = User.friends.through
+    extra = 0
+
+
 @admin.register(User)
 class MyUserAdmin(UserAdmin):
     """Админка пользователя."""
@@ -40,11 +48,9 @@ class MyUserAdmin(UserAdmin):
         "email",
         "first_name",
         "last_name",
-        "nickname",
         "birthday",
         "city",
         "profession",
-        "character",
         "sex",
         "purpose",
         "network_nick",
@@ -71,7 +77,6 @@ class MyUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": basic_fields
                 + (
-                    # "avatar",
                     "password1",
                     "password2",
                     "is_staff",
@@ -80,8 +85,8 @@ class MyUserAdmin(UserAdmin):
             },
         ),
     )
-    inlines = (InterestInlineAdmin,)
-    search_fields = ("email", "first_name", "last_name", "nickname")
+    inlines = (InterestInlineAdmin, FriendInlineAdmin)
+    search_fields = ("email", "first_name", "last_name")
     ordering = ("-id",)
     empty_value_display = "-пусто-"
     readonly_fields = ["preview"]

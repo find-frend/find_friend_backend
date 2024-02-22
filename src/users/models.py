@@ -4,7 +4,12 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
+from config.settings import (
+    MAX_LENGTH_CHAR,
+    MAX_LENGTH_DESCRIBE,
+    MAX_LENGTH_EMAIL,
+    MAX_LENGTH_EVENT,
+)
 
 from .utils import make_thumbnail
 from .validators import validate_birthday
@@ -80,13 +85,6 @@ class User(AbstractUser):
             ),
         ]
     )
-    nickname = models.SlugField(
-        "Ник пользователя",
-        max_length=MAX_LENGTH_CHAR,
-        unique=True,
-        blank=True,
-        null=True,
-    )
     birthday = models.DateField(
         "День рождения",
         blank=True,
@@ -100,25 +98,26 @@ class User(AbstractUser):
         verbose_name="Интересы",
         help_text="Интересы пользователя",
     )
+    friends = models.ManyToManyField(
+        "User",
+        through="Friend",
+        blank=True,
+        verbose_name="Друзья",
+        help_text="Друзья пользователя",
+    )
     city = models.CharField(
         "Место проживания",
         max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
-    liked_list = models.JSONField(blank=True, default=list)
     avatar = models.ImageField(
         "Аватарка",
         blank=True,
         upload_to="images/user/",
     )
     profession = models.CharField(
-        "Профессия",
-        max_length=MAX_LENGTH_CHAR,
-        blank=True,
-    )
-    character = models.CharField(
-        "Характер",
-        max_length=MAX_LENGTH_CHAR,
+        "Работа",
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     sex = models.CharField(
@@ -130,19 +129,34 @@ class User(AbstractUser):
     )
     purpose = models.CharField(
         "Цель поиска друга",
-        max_length=MAX_LENGTH_CHAR,
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     network_nick = models.CharField(
         "Ник в других соц.сетях",
-        max_length=MAX_LENGTH_CHAR,
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     additionally = models.TextField(
-        "Дополнительно",
+        "О себе",
+        max_length=MAX_LENGTH_DESCRIBE,
+        blank=True,
+    )
+    '''
+    nickname = models.SlugField(
+        "Ник пользователя",
+        max_length=MAX_LENGTH_CHAR,
+        unique=True,
+        blank=True,
+        null=True,
+    )
+    liked_list = models.JSONField(blank=True, default=list)
+    character = models.CharField(
+        "Характер",
         max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
+    '''
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
@@ -215,10 +229,14 @@ class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="initiator"
+        User,
+        on_delete=models.CASCADE,
+        related_name="initiator"
     )
     friend = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="friend"
+        User,
+        on_delete=models.CASCADE,
+        related_name="friend"
     )
     is_added = models.BooleanField(default=False)
 
