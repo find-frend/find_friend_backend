@@ -126,7 +126,7 @@ class FriendSerializer(ModelSerializer):
             ).exists()
         ):
             raise ValidationError(
-                detail="Повторная дружба не возможна",
+                detail="Повторная дружба невозможна",
                 code=status.HTTP_400_BAD_REQUEST,
             )
         if initiator == friend:
