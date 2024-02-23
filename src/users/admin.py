@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
@@ -9,7 +11,7 @@ from .models import City, Friend, Interest, User
 class CityAdmin(admin.ModelAdmin):
     """Админка городов."""
 
-    list_display = ("id", "name")
+    list_display = ("name",)
 
 
 @admin.register(Interest)
@@ -72,6 +74,8 @@ class MyUserAdmin(UserAdmin):
                 "fields": basic_fields
                 + (
                     "preview",
+                    "age",
+                    "friends_count",
                     "password",
                 )
             },
@@ -97,7 +101,7 @@ class MyUserAdmin(UserAdmin):
     search_fields = ("email", "first_name", "last_name")
     ordering = ("-id",)
     empty_value_display = "-пусто-"
-    readonly_fields = ["preview"]
+    readonly_fields = ["preview", "age", "friends_count"]
 
     @admin.display(description="Фото профиля", empty_value="Нет фото")
     def preview(self, obj):
@@ -108,6 +112,24 @@ class MyUserAdmin(UserAdmin):
                 'style="max-height: 100px; max-width: 100px">'
             )
         return None
+
+    @admin.display(description="Возраст", empty_value=0)
+    def age(self, obj):
+        """Отображение возраста."""
+        today = date.today()
+        return (
+            today.year
+            - obj.birthday.year
+            - (
+                (today.month, today.day)
+                < (obj.birthday.month, obj.birthday.day)
+            )
+        )
+
+    @admin.display(description="Количество друзей", empty_value=0)
+    def friends_count(self, obj):
+        """Отображение количества друзей."""
+        return obj.friends.count()
 
 
 @admin.register(Friend)

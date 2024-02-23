@@ -17,6 +17,22 @@ from .utils import make_thumbnail
 from .validators import validate_birthday
 
 
+class City(models.Model):
+    """Модель городов."""
+
+    name = models.CharField(
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
+    )
+
+    class Meta:
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class CustomUserManager(BaseUserManager):
     """Кастомный UserManager - уникальный ID пользователя - email."""
 
@@ -108,7 +124,7 @@ class User(AbstractUser):
         help_text="Друзья пользователя",
     )
     city = models.ForeignKey(
-        "City",
+        City,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -147,7 +163,7 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_DESCRIBE,
         blank=True,
     )
-    '''
+    """
     nickname = models.SlugField(
         "Ник пользователя",
         max_length=MAX_LENGTH_CHAR,
@@ -161,7 +177,7 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
-    '''
+    """
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
@@ -192,6 +208,10 @@ class User(AbstractUser):
                 < (self.birthday.month, self.birthday.day)
             )
         )
+
+    def friends_count(self):
+        """Получение количества друзей пользователя."""
+        return self.friends.count()
 
 
 class Interest(models.Model):
@@ -242,34 +262,14 @@ class UserInterest(models.Model):
         return f"{self.user} - {self.interest}"
 
 
-class City(models.Model):
-    """Модель городов."""
-
-    name = models.CharField(
-        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
-    )
-
-    class Meta:
-        verbose_name = "Город"
-        verbose_name_plural = "Города"
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
 class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="initiator"
+        User, on_delete=models.CASCADE, related_name="initiator"
     )
     friend = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="friend"
+        User, on_delete=models.CASCADE, related_name="friend"
     )
     is_added = models.BooleanField(default=False)
 
