@@ -1,10 +1,12 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
+# from events.models import EventInterest
 from events.models import Event, EventMember
-from users.models import Friend, Interest, User, UserInterest
+from users.models import City, Friend, Interest, User, UserInterest
 
 
 class InterestSerializer(ModelSerializer):
@@ -18,19 +20,26 @@ class InterestSerializer(ModelSerializer):
 class MyUserSerializer(UserSerializer):
     """Сериализатор пользователя."""
 
+    city = SlugRelatedField(
+        slug_field="name",
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     interests = InterestSerializer(many=True)
+    age = serializers.IntegerField()
 
     class Meta:
         model = User
         fields = (
             "id",
-            "email",
             "first_name",
             "last_name",
             "birthday",
             "interests",
             "friends",
             "city",
+            "interests",
             "avatar",
             "profession",
             "sex",
@@ -91,7 +100,7 @@ class MyUserCreateSerializer(UserCreateSerializer):
         fields = tuple(User.REQUIRED_FIELDS) + (
             User.USERNAME_FIELD,
             "password",
-            "birthday"
+            "birthday",
         )
 
 
@@ -183,9 +192,7 @@ class EventSerializer(ModelSerializer):
         event = Event.objects.create(**validated_data)
         for member in members:
             current_member = User.objects.get(**member)
-            EventMember.objects.create(
-                event=event, member=current_member
-            )
+            EventMember.objects.create(event=event, member=current_member)
         return event
 
     def update(self, instance, validated_data):
@@ -194,7 +201,5 @@ class EventSerializer(ModelSerializer):
             members = validated_data.pop("members")
         for member in members:
             current_member = User.objects.get(**member)
-            EventMember.objects.create(
-                event=instance, member=current_member
-            )
+            EventMember.objects.create(event=instance, member=current_member)
         return super().update(instance, validated_data)

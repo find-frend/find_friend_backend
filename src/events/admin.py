@@ -32,7 +32,7 @@ class EventAdmin(admin.ModelAdmin):
         "name",
     )
     # inlines = (InterestInlineAdmin, )
-    inlines = (MemberInlineAdmin, )
+    inlines = (MemberInlineAdmin,)
 
     readonly_fields = ["preview"]
 

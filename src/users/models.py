@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -68,9 +70,9 @@ class User(AbstractUser):
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
                 message="Имя может содержать только буквы, пробел и дефис",
-                code="invalid_user_first_name"
+                code="invalid_user_first_name",
             ),
-        ]
+        ],
     )
     last_name = models.CharField(
         "Фамилия",
@@ -81,9 +83,9 @@ class User(AbstractUser):
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
                 message="Фамилия может содержать только буквы, пробел и дефис",
-                code="invalid_user_last_name"
+                code="invalid_user_last_name",
             ),
-        ]
+        ],
     )
     birthday = models.DateField(
         "День рождения",
@@ -105,10 +107,13 @@ class User(AbstractUser):
         verbose_name="Друзья",
         help_text="Друзья пользователя",
     )
-    city = models.CharField(
-        "Место проживания",
-        max_length=MAX_LENGTH_CHAR,
+    city = models.ForeignKey(
+        "City",
+        on_delete=models.SET_NULL,
         blank=True,
+        null=True,
+        verbose_name="Город",
+        help_text="Город проживания",
     )
     avatar = models.ImageField(
         "Аватарка",
@@ -176,6 +181,18 @@ class User(AbstractUser):
             self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
 
+    def age(self):
+        """Вычисление возраста пользователя."""
+        today = date.today()
+        return (
+            today.year
+            - self.birthday.year
+            - (
+                (today.month, today.day)
+                < (self.birthday.month, self.birthday.day)
+            )
+        )
+
 
 class Interest(models.Model):
     """Модель интересов."""
@@ -223,6 +240,22 @@ class UserInterest(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.interest}"
+
+
+class City(models.Model):
+    """Модель городов."""
+
+    name = models.CharField(
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
+    )
+
+    class Meta:
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class Friend(models.Model):
