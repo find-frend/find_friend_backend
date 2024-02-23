@@ -1,10 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import status
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
-# from events.models import EventInterest
 from events.models import Event, EventMember
 from users.models import City, Friend, Interest, User, UserInterest
 
@@ -28,6 +26,7 @@ class MyUserSerializer(UserSerializer):
     )
     interests = InterestSerializer(many=True)
     age = serializers.IntegerField()
+    friends_count = serializers.IntegerField()
 
     class Meta:
         model = User
@@ -36,21 +35,19 @@ class MyUserSerializer(UserSerializer):
             "first_name",
             "last_name",
             "birthday",
+            "sex",
+            "age",
             "interests",
             "friends",
+            "friends_count",
             "city",
             "interests",
             "avatar",
             "profession",
-            "sex",
             "purpose",
             "network_nick",
             "additionally",
         )
-
-    def get_friends_count(self, user):
-        """Получение количества друзей пользователя."""
-        return user.friends.count()
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
@@ -66,9 +63,9 @@ class MyUserSerializer(UserSerializer):
             UserInterest.objects.create(user=user, interest=current_interest)
         for friend in friends:
             current_friend = User.objects.get(**friend)
-            Friend.objects.create(initiator=user,
-                                  friend=current_friend,
-                                  is_added=friend.is_added)
+            Friend.objects.create(
+                initiator=user, friend=current_friend, is_added=friend.is_added
+            )
         return user
 
     def update(self, instance, validated_data):
@@ -86,9 +83,11 @@ class MyUserSerializer(UserSerializer):
         friends = validated_data.pop("friends")
         for friend in friends:
             current_friend = User.objects.get(**friend)
-            Friend.objects.create(initiator=instance,
-                                  friend=current_friend,
-                                  is_added=friend.is_added)
+            Friend.objects.create(
+                initiator=instance,
+                friend=current_friend,
+                is_added=friend.is_added,
+            )
         return super().update(instance, validated_data)
 
 
@@ -119,20 +118,21 @@ class FriendSerializer(ModelSerializer):
     def validate(self, data):
         """Валидация сочетания друзей."""
         initiator = self.instance
-        friend = self.context.get('request').friend
-        if (Friend.objects.filter(
-            initiator=initiator,
-            friend=friend).exists() or Friend.objects.filter(
-            initiator=friend,
-                friend=initiator).exists()):
+        friend = self.context.get("request").friend
+        if (
+            Friend.objects.filter(initiator=initiator, friend=friend).exists()
+            or Friend.objects.filter(
+                initiator=friend, friend=initiator
+            ).exists()
+        ):
             raise ValidationError(
-                detail='Повторная дружба не возможна',
-                code=status.HTTP_400_BAD_REQUEST
+                detail="Повторная дружба невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
             )
         if initiator == friend:
             raise ValidationError(
-                detail='Дружба с самим собой невозможна',
-                code=status.HTTP_400_BAD_REQUEST
+                detail="Дружба с самим собой невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
             )
         return data
 
