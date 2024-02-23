@@ -13,15 +13,6 @@ class MemberInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-'''
-class InterestInlineAdmin(admin.TabularInline):
-    """Админка связи мероприятия и интересов."""
-
-    model = Event.interests.through
-    extra = 0
-'''
-
-
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     """Админка мероприятия."""
@@ -54,7 +45,7 @@ class EventAdmin(admin.ModelAdmin):
     @admin.display(description="Участники")
     def member_names(self, object):
         """Отображаются имена пользователей."""
-        users = object.users.values_list("nickname")
+        users = object.users.values_list("email")
         return list(chain.from_iterable(users))
 
     @admin.display(description="Просмотр фото", empty_value="Нет фото")

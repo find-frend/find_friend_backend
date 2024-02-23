@@ -1,4 +1,5 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework import status
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
@@ -34,37 +35,60 @@ class MyUserSerializer(UserSerializer):
             "id",
             "first_name",
             "last_name",
-            "sex",
-            "age",
-            # "email",
+            "birthday",
             "interests",
+            "friends",
             "city",
             "interests",
             "avatar",
             "profession",
-            "character",
+            "sex",
             "purpose",
             "network_nick",
             "additionally",
         )
 
+    def get_friends_count(self, user):
+        """Получение количества друзей пользователя."""
+        return user.friends.count()
+
+    def create(self, validated_data):
+        """Создание пользователя с указанными интересами и друзьями."""
+        if "interests" not in self.initial_data:
+            return User.objects.create(**validated_data)
+        interests = validated_data.pop("interests")
+        if "friends" not in self.initial_data:
+            return User.objects.create(**validated_data)
+        friends = validated_data.pop("friends")
+        user = User.objects.create(**validated_data)
+        for interest in interests:
+            current_interest = Interest.objects.get(**interest)
+            UserInterest.objects.create(user=user, interest=current_interest)
+        for friend in friends:
+            current_friend = User.objects.get(**friend)
+            Friend.objects.create(initiator=user,
+                                  friend=current_friend,
+                                  is_added=friend.is_added)
+        return user
+
     def update(self, instance, validated_data):
-        """Обновление пользователя с указанными интересами и городом."""
-        interests = validated_data.pop("interests", None)
-        if not instance:
-            instance = User.objects.create(**validated_data)
-        if interests:
-            for interest in interests:
-                try:
-                    current_interest = Interest.objects.get(**interest)
-                except Interest.DoesNotExist:
-                    raise ValidationError(
-                        "Пожалуйста, выберите интересы из списка "
-                        "предустановленных."
-                    )
-                UserInterest.objects.update_or_create(
-                    user=instance, interest=current_interest
-                )
+        """Обновление пользователя с указанными интересами и друзьями."""
+        if "interests" not in self.initial_data:
+            return super().update(instance, validated_data)
+        interests = validated_data.pop("interests")
+        for interest in interests:
+            current_interest = Interest.objects.get(**interest)
+            UserInterest.objects.create(
+                user=instance, interest=current_interest
+            )
+        if "friends" not in self.initial_data:
+            return super().update(instance, validated_data)
+        friends = validated_data.pop("friends")
+        for friend in friends:
+            current_friend = User.objects.get(**friend)
+            Friend.objects.create(initiator=instance,
+                                  friend=current_friend,
+                                  is_added=friend.is_added)
         return super().update(instance, validated_data)
 
 
@@ -91,6 +115,26 @@ class FriendSerializer(ModelSerializer):
             "friend",
             "is_added",
         )
+
+    def validate(self, data):
+        """Валидация сочетания друзей."""
+        initiator = self.instance
+        friend = self.context.get('request').friend
+        if (Friend.objects.filter(
+            initiator=initiator,
+            friend=friend).exists() or Friend.objects.filter(
+            initiator=friend,
+                friend=initiator).exists()):
+            raise ValidationError(
+                detail='Повторная дружба не возможна',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        if initiator == friend:
+            raise ValidationError(
+                detail='Дружба с самим собой невозможна',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return data
 
 
 class EventSerializer(ModelSerializer):
