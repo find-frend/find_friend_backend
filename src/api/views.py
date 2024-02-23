@@ -39,4 +39,3 @@ class EventViewSet(ModelViewSet):
     filter_backends = (EventSearchFilter, DjangoFilterBackend)
     filterset_class = EventsFilter
     pagination_class = EventPagination
-
