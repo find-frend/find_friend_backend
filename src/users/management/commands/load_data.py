@@ -12,6 +12,7 @@ from events.models import Event
 PARAMS_MODELS = {
     'cities': City,
     'users': User,
+    'interests': Interest,
     'events': Event,
     'user_interest': (User, Interest),
 }
@@ -40,6 +41,11 @@ class Command(BaseCommand):
             '--cities',
             action='store',
             help='Load data to "city" model',
+        )
+        parser.add_argument(
+            '--interests',
+            action='store',
+            help='Load data to "interest" model',
         )
         parser.add_argument(
             '--users',
