@@ -9,6 +9,7 @@ from users.models import Friend, User
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .serializers import EventSerializer, FriendSerializer, MyUserSerializer
+from .permissions import IsAdminOrAuthorOrReadOnly
 
 
 class MyUserViewSet(UserViewSet):
@@ -20,6 +21,7 @@ class MyUserViewSet(UserViewSet):
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = UserFilter
     search_fields = ["first_name", "last_name"]
+    permission_classes = [IsAdminOrAuthorOrReadOnly, ]
 
 
 class FriendViewSet(ModelViewSet):
@@ -38,3 +40,4 @@ class EventViewSet(ModelViewSet):
     filter_backends = (EventSearchFilter, DjangoFilterBackend)
     filterset_class = EventsFilter
     pagination_class = EventPagination
+    permission_classes = [IsAdminOrAuthorOrReadOnly, ]
