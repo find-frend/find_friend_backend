@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from .models import City, Friend, Interest, User
@@ -36,6 +37,55 @@ class FriendInlineAdmin(admin.TabularInline):
     extra = 0
 
 
+def years_count(value):
+    """Вычисление интервала лет."""
+    value = int(value)
+    now = timezone.now()
+    start_year = now.year - value - 10
+    end_year = start_year + 10
+    return start_year, end_year
+
+
+class AgeFilter(admin.SimpleListFilter):
+    """Фильтр пользрвателй по возрасту в админке."""
+
+    title = "Возраст"
+    parameter_name = "age"
+
+    def lookups(self, request, model_admin):
+        """Метод формирования списка интервалов по возрасту."""
+        return [
+            ("14", "14-20 лет"),
+            ("20", "20-30 лет"),
+            ("30", "30-40 лет"),
+            ("40", "40-50 лет"),
+            ("50", "50-60 лет"),
+            ("60", "60-70 лет"),
+            ("70", "70-80 лет"),
+            ("80", "80-90 лет"),
+            ("90", "90-100 лет"),
+            ("100", "100-110 лет"),
+            ("110", "110-120 лет"),
+        ]
+
+    def queryset(self, request, queryset):
+        """Метод фильтрации пользователей по возрасту в интервале."""
+        if not self.value():
+            return queryset
+        value = self.value()
+        now = timezone.now()
+        if value == "14":
+            start_year = now.year - 20
+            end_year = start_year + 6
+        else:
+            start_year, end_year = years_count(value)
+        start_date = date(start_year, now.month, now.day)
+        end_date = date(end_year, now.month, now.day) - timedelta(1)
+        return queryset.filter(
+            birthday__gte=start_date, birthday__lte=end_date
+        )
+
+
 @admin.register(User)
 class MyUserAdmin(UserAdmin):
     """Админка пользователя."""
@@ -46,13 +96,15 @@ class MyUserAdmin(UserAdmin):
         "email",
         "first_name",
         "last_name",
-        # "age",
         "is_staff",
     )
     list_filter = (
         "email",
         "is_staff",
         "is_active",
+        "sex",
+        AgeFilter,
+        "city",
     )
     basic_fields = (
         "email",
@@ -116,20 +168,12 @@ class MyUserAdmin(UserAdmin):
     @admin.display(description="Возраст", empty_value=0)
     def age(self, obj):
         """Отображение возраста."""
-        today = date.today()
-        return (
-            today.year
-            - obj.birthday.year
-            - (
-                (today.month, today.day)
-                < (obj.birthday.month, obj.birthday.day)
-            )
-        )
+        return obj.age()
 
     @admin.display(description="Количество друзей", empty_value=0)
     def friends_count(self, obj):
         """Отображение количества друзей."""
-        return obj.friends.count()
+        return obj.friends_count()
 
 
 @admin.register(Friend)
