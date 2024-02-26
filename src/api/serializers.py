@@ -25,7 +25,7 @@ class MyUserSerializer(UserSerializer):
         allow_null=True,
     )
     interests = InterestSerializer(many=True)
-    # age = serializers.IntegerField()
+    age = serializers.IntegerField()
     friends_count = serializers.IntegerField()
 
     class Meta:
@@ -36,7 +36,7 @@ class MyUserSerializer(UserSerializer):
             "last_name",
             "birthday",
             "sex",
-            # "age",
+            "age",
             "interests",
             "friends",
             "friends_count",

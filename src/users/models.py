@@ -199,15 +199,17 @@ class User(AbstractUser):
 
     def age(self):
         """Вычисление возраста пользователя."""
-        today = date.today()
-        return (
-            today.year
-            - self.birthday.year
-            - (
-                (today.month, today.day)
-                < (self.birthday.month, self.birthday.day)
+        if self.birthday:
+            today = date.today()
+            return (
+                today.year
+                - self.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (self.birthday.month, self.birthday.day)
+                )
             )
-        )
+        return None
 
     def friends_count(self):
         """Получение количества друзей пользователя."""
