@@ -138,7 +138,12 @@ class FriendSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        """Валидация сочетания друзей."""
+        """Валидация друзей."""
+        if not data:
+            raise ValidationError(
+                detail="Ошибка с выбором друга",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
         initiator = self.instance
         friend = self.context.get("request").friend
         if (
