@@ -50,7 +50,7 @@ def years_count(value):
 
 
 class AgeFilter(admin.SimpleListFilter):
-    """Фильтр пользователй по возрасту в админке."""
+    """Фильтр пользователей по возрасту в админке."""
 
     title = "Возраст"
     parameter_name = "age"
@@ -90,7 +90,7 @@ class AgeFilter(admin.SimpleListFilter):
 
 
 class CityFilter(AutocompleteFilter):
-    """Фильтр пользователй по городу в админке."""
+    """Фильтр пользователей по городу в админке."""
 
     title = "Город"
     field_name = "city"
