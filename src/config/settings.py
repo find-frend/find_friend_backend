@@ -13,27 +13,36 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = (
-    ["127.0.0.1", "localhost", '213.189.221.246']
+    ["127.0.0.1", "localhost", "213.189.221.246", "backend"]
     if DEBUG
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
-
-INSTALLED_APPS = [
+DJANGO_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+)
+
+THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
     "djoser",
     "drf_yasg",
-    "api.apps.ApiConfig",
-    "users.apps.UsersConfig",
-    "events.apps.EventsConfig",
-]
+    "django_filters",
+    "admin_auto_filters",
+)
+
+LOCAL_APPS = (
+    "api",
+    "users",
+    "events",
+)
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -46,6 +55,15 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://*.localhost",
+    "http://*.127.0.0.1",
+    "https://*.localhost",
+    "https://*.127.0.0.1",
+    "https://*.213.189.221.246",
+    "http://*.213.189.221.246",
+]
 
 TEMPLATES = [
     {
@@ -137,7 +155,7 @@ DJOSER = {
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
-        "user_list": ["rest_framework.permissions.IsAdminUser"],
+        "user_list": ["rest_framework.permissions.IsAuthenticated"],
         "activation": ["rest_framework.permissions.IsAdminUser"],
     },
     "HIDE_USERS": False,
@@ -155,7 +173,7 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -174,3 +192,4 @@ REST_FRAMEWORK = {
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_CHAR = 150
 MAX_LENGTH_EVENT = 50
+MAX_LENGTH_DESCRIBE = 500

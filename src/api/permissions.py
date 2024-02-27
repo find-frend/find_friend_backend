@@ -17,13 +17,14 @@ class IsAdminOrAuthorOrReadOnly(permissions.BasePermission):
             return True
         if request.method == "POST":
             return request.user.is_authenticated
-        return obj.author == request.user or request.user.is_admin
+        return obj.id == request.user.id or request.user.is_staff
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Проверка доступа."""
 
     def has_permission(self, request, view):
+        """Проверка доступа."""
         return (
-            request.method in permissions.SAFE_METHODS or request.user.is_admin
+            request.method in permissions.SAFE_METHODS or request.user.is_staff
         )

@@ -1,15 +1,24 @@
 from itertools import chain
 
+from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from .models import Event, EventMember
 
 
-class InterestInlineAdmin(admin.TabularInline):
-    """Админка связи мероприятия и интересов."""
+class CityEventFilter(AutocompleteFilter):
+    """Фильтр мероприятий по городу в админке."""
 
-    model = Event.interests.through
+    title = "Место проведения"
+    field_name = "city"
+    use_pk_exact = False
+
+
+class MemberInlineAdmin(admin.TabularInline):
+    """Админка связи мероприятия и участников."""
+
+    model = Event.members.through
     extra = 0
 
 
@@ -23,15 +32,15 @@ class EventAdmin(admin.ModelAdmin):
         "description",
         "event_type",
         "date",
-        "location",
+        "city",
         "event_price",
     )
     search_fields = ("name",)
-    list_filter = (
-        "location",
-        "name",
-    )
-    inlines = (InterestInlineAdmin,)
+    list_filter = (CityEventFilter,)
+    # inlines = (InterestInlineAdmin, )
+    inlines = (MemberInlineAdmin,)
+    search_fields = ("name",)
+    readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")
     def interest_names(self, object):
@@ -39,7 +48,13 @@ class EventAdmin(admin.ModelAdmin):
         interests = object.interests.values_list("name")
         return list(chain.from_iterable(interests))
 
-    @admin.display(description="Фото мерприятия", empty_value="Нет фото")
+    @admin.display(description="Участники")
+    def member_names(self, object):
+        """Отображаются имена пользователей."""
+        users = object.users.values_list("email")
+        return list(chain.from_iterable(users))
+
+    @admin.display(description="Просмотр фото", empty_value="Нет фото")
     def preview(self, object):
         """Отображается фото мерприятия."""
         if object.image:

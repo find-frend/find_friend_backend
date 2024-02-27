@@ -1,11 +1,36 @@
+from datetime import date
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EMAIL
+from config.settings import (
+    MAX_LENGTH_CHAR,
+    MAX_LENGTH_DESCRIBE,
+    MAX_LENGTH_EMAIL,
+    MAX_LENGTH_EVENT,
+)
 
 from .utils import make_thumbnail
+from .validators import validate_birthday
+
+
+class City(models.Model):
+    """Модель городов."""
+
+    name = models.CharField(
+        max_length=MAX_LENGTH_CHAR, verbose_name="Название города", unique=True
+    )
+
+    class Meta:
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class CustomUserManager(BaseUserManager):
@@ -53,22 +78,36 @@ class User(AbstractUser):
         unique=True,
     )
     first_name = models.CharField(
-        "Имя", max_length=MAX_LENGTH_CHAR, blank=False, null=False
+        "Имя",
+        max_length=MAX_LENGTH_CHAR,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Имя может содержать только буквы, пробел и дефис",
+                code="invalid_user_first_name",
+            ),
+        ],
     )
     last_name = models.CharField(
-        "Фамилия", max_length=MAX_LENGTH_CHAR, blank=False, null=False
-    )
-    nickname = models.SlugField(
-        "Ник пользователя",
+        "Фамилия",
         max_length=MAX_LENGTH_CHAR,
-        unique=True,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
+                message="Фамилия может содержать только буквы, пробел и дефис",
+                code="invalid_user_last_name",
+            ),
+        ],
     )
     birthday = models.DateField(
         "День рождения",
         blank=True,
         null=True,
+        validators=[validate_birthday],
     )
     interests = models.ManyToManyField(
         "Interest",
@@ -77,25 +116,29 @@ class User(AbstractUser):
         verbose_name="Интересы",
         help_text="Интересы пользователя",
     )
-    city = models.CharField(
-        "Место проживания",
-        max_length=MAX_LENGTH_CHAR,
+    friends = models.ManyToManyField(
+        "User",
+        through="Friend",
         blank=True,
+        verbose_name="Друзья",
+        help_text="Друзья пользователя",
     )
-    liked_list = models.JSONField(blank=True, default=list)
+    city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name="Город",
+        help_text="Город проживания",
+    )
     avatar = models.ImageField(
         "Аватарка",
         blank=True,
         upload_to="images/user/",
     )
     profession = models.CharField(
-        "Профессия",
-        max_length=MAX_LENGTH_CHAR,
-        blank=True,
-    )
-    character = models.CharField(
-        "Характер",
-        max_length=MAX_LENGTH_CHAR,
+        "Работа",
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     sex = models.CharField(
@@ -107,19 +150,34 @@ class User(AbstractUser):
     )
     purpose = models.CharField(
         "Цель поиска друга",
-        max_length=MAX_LENGTH_CHAR,
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     network_nick = models.CharField(
         "Ник в других соц.сетях",
-        max_length=MAX_LENGTH_CHAR,
+        max_length=MAX_LENGTH_EVENT,
         blank=True,
     )
     additionally = models.TextField(
-        "Дополнительно",
+        "О себе",
+        max_length=MAX_LENGTH_DESCRIBE,
+        blank=True,
+    )
+    """
+    nickname = models.SlugField(
+        "Ник пользователя",
+        max_length=MAX_LENGTH_CHAR,
+        unique=True,
+        blank=True,
+        null=True,
+    )
+    liked_list = models.JSONField(blank=True, default=list)
+    character = models.CharField(
+        "Характер",
         max_length=MAX_LENGTH_CHAR,
         blank=True,
     )
+    """
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
@@ -138,6 +196,24 @@ class User(AbstractUser):
         if self.avatar:
             self.avatar = make_thumbnail(self.avatar, size=(100, 100))
         super().save(*args, **kwargs)
+
+    def age(self):
+        """Вычисление возраста пользователя."""
+        if self.birthday:
+            today = date.today()
+            return (
+                today.year
+                - self.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (self.birthday.month, self.birthday.day)
+                )
+            )
+        return None
+
+    def friends_count(self):
+        """Получение количества друзей пользователя."""
+        return self.friends.count()
 
 
 class Interest(models.Model):
