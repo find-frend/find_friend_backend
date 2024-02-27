@@ -1,9 +1,18 @@
 from itertools import chain
 
+from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from .models import Event, EventMember
+
+
+class CityEventFilter(AutocompleteFilter):
+    """Фильтр мероприятий по городу в админке."""
+
+    title = "Место проведения"
+    field_name = "city"
+    use_pk_exact = False
 
 
 class MemberInlineAdmin(admin.TabularInline):
@@ -23,17 +32,14 @@ class EventAdmin(admin.ModelAdmin):
         "description",
         "event_type",
         "date",
-        "location",
+        "city",
         "event_price",
     )
     search_fields = ("name",)
-    list_filter = (
-        "location",
-        "name",
-    )
+    list_filter = (CityEventFilter,)
     # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
-
+    search_fields = ("name",)
     readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")

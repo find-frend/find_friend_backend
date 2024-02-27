@@ -17,6 +17,9 @@ class UserFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = [
+            "email",
+            "first_name",
+            "last_name",
             "sex",
             "age",
             "city",
@@ -25,16 +28,17 @@ class UserFilter(filters.FilterSet):
             "purpose",
         ]
 
-    def filter_age(self, queryset, value):
+    def filter_age(self, queryset, param, value):
         """Метод фильтрации пользователей по возрасту."""
-        if not value:
+        if not param or not value:
             return queryset
+        value = int(value)
         now = timezone.now()
         now_day = now.day
         now_month = now.month
         now_year = now.year
-        start_date = date(now_year - value, now_month, now_day)
-        end_date = date(now_year - value + 1, now_month, now_day)
+        start_date = date(now_year - value - 1, now_month, now_day)
+        end_date = date(now_year - value, now_month, now_day)
         return queryset.filter(
             birthday__gte=start_date, birthday__lte=end_date
         )
@@ -47,7 +51,7 @@ class EventsFilter(filters.FilterSet):
 
     class Meta:
         model = Event
-        fields = ["event_type", "date", "location"]
+        fields = ["event_type", "date", "city"]
 
 
 class EventSearchFilter(SearchFilter):

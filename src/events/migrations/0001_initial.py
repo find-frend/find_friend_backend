@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
                     models.DateTimeField(verbose_name="Дата мероприятия"),
                 ),
                 (
-                    "location",
+                    "city",
                     models.CharField(
                         max_length=150,
                         verbose_name="Место проведения мероприятия",

@@ -103,6 +103,28 @@ class MyUserCreateSerializer(UserCreateSerializer):
         )
 
 
+class MyUserGetSerializer(UserSerializer):
+    """Сериализатор пользователя."""
+
+    city = SlugRelatedField(
+        slug_field="name",
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    age = serializers.IntegerField()
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "first_name",
+            "last_name",
+            "age",
+            "city",
+        )
+
+
 class FriendSerializer(ModelSerializer):
     """Сериализатор друга пользователя."""
 
@@ -116,7 +138,12 @@ class FriendSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        """Валидация сочетания друзей."""
+        """Валидация друзей."""
+        if not data:
+            raise ValidationError(
+                detail="Ошибка с выбором друга",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
         initiator = self.instance
         friend = self.context.get("request").friend
         if (
@@ -152,7 +179,7 @@ class EventSerializer(ModelSerializer):
             "members",
             "event_type",
             "date",
-            "location",
+            "city",
             "event_price",
             "image",
         )

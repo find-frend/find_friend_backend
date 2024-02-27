@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name="event",
-            name="location",
+            name="city",
             field=models.ForeignKey(
                 max_length=150,
                 null=True,

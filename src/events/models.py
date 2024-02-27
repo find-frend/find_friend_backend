@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from django.db import models
 
-from config.settings import MAX_LENGTH_CHAR, MAX_LENGTH_EVENT
-from users.models import Interest, User, City
+from config.settings import MAX_LENGTH_EVENT
+from users.models import City, Interest, User
 
 
 class Event(models.Model):
@@ -38,12 +38,12 @@ class Event(models.Model):
     date = models.DateTimeField(
         verbose_name="Дата мероприятия",
     )
-    location = models.ForeignKey(
+    city = models.ForeignKey(
         City,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
-        max_length=MAX_LENGTH_CHAR,
-        verbose_name="Место проведения мероприятия"
+        verbose_name="Место проведения мероприятия",
     )
     image = models.ImageField(
         upload_to="images/events/", verbose_name="Фото мероприятия", blank=True
