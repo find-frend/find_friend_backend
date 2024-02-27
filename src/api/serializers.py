@@ -103,6 +103,28 @@ class MyUserCreateSerializer(UserCreateSerializer):
         )
 
 
+class MyUserGetSerializer(UserSerializer):
+    """Сериализатор пользователя."""
+
+    city = SlugRelatedField(
+        slug_field="name",
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    age = serializers.IntegerField()
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "first_name",
+            "last_name",
+            "age",
+            "city",
+        )
+
+
 class FriendSerializer(ModelSerializer):
     """Сериализатор друга пользователя."""
 
@@ -152,7 +174,7 @@ class EventSerializer(ModelSerializer):
             "members",
             "event_type",
             "date",
-            "location",
+            "city",
             "event_price",
             "image",
         )

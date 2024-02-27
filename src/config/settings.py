@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = (
     "djoser",
     "drf_yasg",
     "django_filters",
+    "admin_auto_filters",
 )
 
 LOCAL_APPS = (

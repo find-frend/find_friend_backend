@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
@@ -12,6 +13,7 @@ from .models import City, Friend, Interest, User
 class CityAdmin(admin.ModelAdmin):
     """Админка городов."""
 
+    search_fields = ("name",)
     list_display = ("name",)
 
 
@@ -19,6 +21,7 @@ class CityAdmin(admin.ModelAdmin):
 class InterestAdmin(admin.ModelAdmin):
     """Админка интересов."""
 
+    search_fields = ("name",)
     list_display = ("name",)
 
 
@@ -47,7 +50,7 @@ def years_count(value):
 
 
 class AgeFilter(admin.SimpleListFilter):
-    """Фильтр пользрвателй по возрасту в админке."""
+    """Фильтр пользователй по возрасту в админке."""
 
     title = "Возраст"
     parameter_name = "age"
@@ -86,6 +89,13 @@ class AgeFilter(admin.SimpleListFilter):
         )
 
 
+class CityFilter(AutocompleteFilter):
+    """Фильтр пользователй по городу в админке."""
+
+    title = "Город"
+    field_name = "city"
+
+
 @admin.register(User)
 class MyUserAdmin(UserAdmin):
     """Админка пользователя."""
@@ -99,12 +109,12 @@ class MyUserAdmin(UserAdmin):
         "is_staff",
     )
     list_filter = (
-        "email",
+        # "email",
         "is_staff",
         "is_active",
         "sex",
         AgeFilter,
-        "city",
+        CityFilter,
     )
     basic_fields = (
         "email",
@@ -150,9 +160,9 @@ class MyUserAdmin(UserAdmin):
         ),
     )
     inlines = (InterestInlineAdmin, FriendInlineAdmin)
-    search_fields = ("email", "first_name", "last_name")
     ordering = ("-id",)
     empty_value_display = "-пусто-"
+    search_fields = ("email", "first_name", "last_name")
     readonly_fields = ["preview", "age", "friends_count"]
 
     @admin.display(description="Фото профиля", empty_value="Нет фото")
