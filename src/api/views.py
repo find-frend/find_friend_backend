@@ -12,6 +12,7 @@ from .permissions import IsAdminOrAuthorOrReadOnly
 from .serializers import (
     EventSerializer,
     FriendSerializer,
+    MyUserCreateSerializer,
     MyUserGetSerializer,
     MyUserSerializer,
 )
@@ -34,6 +35,8 @@ class MyUserViewSet(UserViewSet):
         """Выбор сериализатора."""
         if self.request.method == "GET":
             return MyUserGetSerializer
+        if self.request.method == "POST":
+            return MyUserCreateSerializer
         return MyUserSerializer
 
 
