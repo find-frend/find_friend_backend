@@ -2,7 +2,7 @@ from datetime import date
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -14,7 +14,13 @@ from config.settings import (
 )
 
 from .utils import make_thumbnail
-from .validators import validate_birthday
+from .validators import (
+    EMAIL_LENGTH_MSG,
+    FIRST_NAME_LENGTH_MSG,
+    INVALID_SYMBOLS_MSG,
+    LAST_NAME_LENGTH_MSG,
+    validate_birthday,
+)
 
 
 class City(models.Model):
@@ -76,6 +82,10 @@ class User(AbstractUser):
         blank=False,
         null=False,
         unique=True,
+        error_messages={
+            "invalid": INVALID_SYMBOLS_MSG,
+            "max_length": EMAIL_LENGTH_MSG,
+        },
     )
     first_name = models.CharField(
         "Имя",
@@ -85,10 +95,15 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message="Имя может содержать только буквы, пробел и дефис",
+                message=INVALID_SYMBOLS_MSG,
                 code="invalid_user_first_name",
             ),
+            MinLengthValidator(limit_value=2),
         ],
+        error_messages={
+            "max_length": FIRST_NAME_LENGTH_MSG,
+            "min_length": FIRST_NAME_LENGTH_MSG,
+        },
     )
     last_name = models.CharField(
         "Фамилия",
@@ -98,10 +113,15 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message="Фамилия может содержать только буквы, пробел и дефис",
+                message=INVALID_SYMBOLS_MSG,
                 code="invalid_user_last_name",
             ),
+            MinLengthValidator(limit_value=2),
         ],
+        error_messages={
+            "max_length": LAST_NAME_LENGTH_MSG,
+            "min_length": LAST_NAME_LENGTH_MSG,
+        },
     )
     birthday = models.DateField(
         "День рождения",
