@@ -2,8 +2,10 @@ from datetime import date
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from config.settings import (
@@ -264,14 +266,36 @@ class UserInterest(models.Model):
         return f"{self.user} - {self.interest}"
 
 
+def validate_friend(value):
+    """Проверка, что друг существует."""
+    friend = get_object_or_404(User, id=value)
+    if not friend or not friend.is_active:
+        raise ValidationError("Указанный друг не существует.")
+    return value
+
+
+def validate_initiator(value):
+    """Проверка, что пользователь существует."""
+    initiator = get_object_or_404(User, id=value)
+    if not initiator or not initiator.is_active:
+        raise ValidationError("Указанный пользователь не существует.")
+    return value
+
+
 class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="initiator"
+        User,
+        on_delete=models.CASCADE,
+        validators=[validate_initiator],
+        related_name="initiator",
     )
     friend = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="friend"
+        User,
+        on_delete=models.CASCADE,
+        validators=[validate_friend],
+        related_name="friend",
     )
     is_added = models.BooleanField(default=False)
 

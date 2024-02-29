@@ -37,6 +37,8 @@ class UserFilter(filters.FilterSet):
         now_day = now.day
         now_month = now.month
         now_year = now.year
+        if now_month == 2 and now_day == 29:
+            now_day -= 1
         start_date = date(now_year - value - 1, now_month, now_day)
         end_date = date(now_year - value, now_month, now_day)
         return queryset.filter(

@@ -9,10 +9,9 @@ from users.models import Friend, User
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly
-from .serializers import (
+from .serializers import (  # MyUserGetSerializer,
     EventSerializer,
     FriendSerializer,
-    MyUserGetSerializer,
     MyUserSerializer,
 )
 
@@ -32,8 +31,8 @@ class MyUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
-        if self.request.method == "GET":
-            return MyUserGetSerializer
+        # if self.request.method == "GET":
+        #    return MyUserGetSerializer
         return MyUserSerializer
 
 
