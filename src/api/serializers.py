@@ -144,8 +144,18 @@ class FriendSerializer(ModelSerializer):
                 detail="Ошибка с выбором друга",
                 code=status.HTTP_400_BAD_REQUEST,
             )
-        initiator = self.instance
-        friend = self.context.get("request").friend
+        initiator = data["initiator"]
+        friend = data["friend"]
+        if not initiator or not initiator.is_active:
+            raise ValidationError(
+                detail=f"Нет такого пользователя {initiator}",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if not friend or not friend.is_active:
+            raise ValidationError(
+                detail=f"Нет такого друга {friend}",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
         if (
             Friend.objects.filter(initiator=initiator, friend=friend).exists()
             or Friend.objects.filter(
