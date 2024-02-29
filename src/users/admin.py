@@ -194,4 +194,5 @@ class FriendAdmin(admin.ModelAdmin):
         "initiator",
         "friend",
         "is_added",
+        "id",
     )
