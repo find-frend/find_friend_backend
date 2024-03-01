@@ -3,17 +3,18 @@ from djoser.views import UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import Friend, User
+from users.models import Friend, Interest, User
 
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly
-from .serializers import EventSerializer  # MyUserGetSerializer,
-from .serializers import (
+from .serializers import (  # MyUserGetSerializer,
+    EventSerializer,
     FriendSerializer,
+    InterestSerializer,
     MyUserCreateSerializer,
     MyUserSerializer,
 )
@@ -160,3 +161,13 @@ class EventViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Создание мероприятия."""
         return super().create(request, *args, **kwargs)
+
+
+class InterestViewSet(ReadOnlyModelViewSet):
+    """Отображение интересов."""
+
+    queryset = Interest.objects.all()
+    serializer_class = InterestSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("^name",)
+    pagination_class = None
