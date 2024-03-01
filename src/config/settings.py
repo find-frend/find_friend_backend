@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "users.validators.PasswordLengthValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -189,7 +189,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+MIN_LENGTH_EMAIL = 5
 MAX_LENGTH_EMAIL = 254
+MIN_LENGTH_CHAR = 2
 MAX_LENGTH_CHAR = 150
 MAX_LENGTH_EVENT = 50
+MIN_LENGTH_PASSWORD = 8
+MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500
