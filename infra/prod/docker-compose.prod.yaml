@@ -1,16 +1,6 @@
 version: '3.8'
 
 services:
-  # db:
-  #   image: postgres:16.1-alpine
-  #   volumes:
-  #     - db_data:/var/lib/postgresql/data/
-  #   ports:
-  #     - "5432:5432"
-  #   env_file:
-  #     - ../../.env
-  #   networks:
-  #     - app_net
 
   backend:
     build: ../../.
@@ -18,8 +8,6 @@ services:
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
-    # depends_on:
-    #   - db
     env_file:
       - ../../.env
     networks:
