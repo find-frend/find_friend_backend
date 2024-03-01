@@ -5,6 +5,12 @@ from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from events.models import Event, EventMember
 from users.models import City, Friend, Interest, User, UserInterest
+from users.validators import (
+    EMAIL_LENGTH_MSG,
+    FIRST_NAME_LENGTH_MSG,
+    INVALID_EMAIL_MSG,
+    LAST_NAME_LENGTH_MSG,
+)
 
 
 class InterestSerializer(ModelSerializer):
@@ -101,6 +107,27 @@ class MyUserCreateSerializer(UserCreateSerializer):
             "password",
             "birthday",
         )
+        extra_kwargs = {
+            "email": {
+                "error_messages": {
+                    "max_length": EMAIL_LENGTH_MSG,
+                    "min_length": EMAIL_LENGTH_MSG,
+                    "invalid": INVALID_EMAIL_MSG,
+                }
+            },
+            "first_name": {
+                "error_messages": {
+                    "max_length": FIRST_NAME_LENGTH_MSG,
+                    "min_length": FIRST_NAME_LENGTH_MSG,
+                }
+            },
+            "last_name": {
+                "error_messages": {
+                    "max_length": LAST_NAME_LENGTH_MSG,
+                    "min_length": LAST_NAME_LENGTH_MSG,
+                }
+            },
+        }
 
 
 class MyUserGetSerializer(UserSerializer):

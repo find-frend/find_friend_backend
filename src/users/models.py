@@ -14,13 +14,7 @@ from config.settings import (
 )
 
 from .utils import make_thumbnail
-from .validators import (
-    EMAIL_LENGTH_MSG,
-    FIRST_NAME_LENGTH_MSG,
-    INVALID_SYMBOLS_MSG,
-    LAST_NAME_LENGTH_MSG,
-    validate_birthday,
-)
+from .validators import INVALID_SYMBOLS_MSG, validate_birthday
 
 
 class City(models.Model):
@@ -82,10 +76,6 @@ class User(AbstractUser):
         blank=False,
         null=False,
         unique=True,
-        error_messages={
-            "invalid": INVALID_SYMBOLS_MSG,
-            "max_length": EMAIL_LENGTH_MSG,
-        },
     )
     first_name = models.CharField(
         "Имя",
@@ -100,10 +90,6 @@ class User(AbstractUser):
             ),
             MinLengthValidator(limit_value=2),
         ],
-        error_messages={
-            "max_length": FIRST_NAME_LENGTH_MSG,
-            "min_length": FIRST_NAME_LENGTH_MSG,
-        },
     )
     last_name = models.CharField(
         "Фамилия",
@@ -118,10 +104,6 @@ class User(AbstractUser):
             ),
             MinLengthValidator(limit_value=2),
         ],
-        error_messages={
-            "max_length": LAST_NAME_LENGTH_MSG,
-            "min_length": LAST_NAME_LENGTH_MSG,
-        },
     )
     birthday = models.DateField(
         "День рождения",

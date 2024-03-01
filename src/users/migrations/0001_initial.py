@@ -3,9 +3,10 @@
 import django.core.validators
 import django.db.models.deletion
 import django.utils.timezone
-import users.validators
 from django.conf import settings
 from django.db import migrations, models
+
+import users.validators
 
 
 class Migration(migrations.Migration):
@@ -143,9 +144,12 @@ class Migration(migrations.Migration):
                         validators=[
                             django.core.validators.RegexValidator(
                                 code="invalid_user_first_name",
-                                message="Имя может содержать только буквы, пробел и дефис",
+                                message="Введены недопустимые символы.",
                                 regex="^[а-яА-ЯёЁa-zA-Z]+(\\s?\\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                            )
+                            ),
+                            django.core.validators.MinLengthValidator(
+                                limit_value=2
+                            ),
                         ],
                         verbose_name="Имя",
                     ),
@@ -157,9 +161,12 @@ class Migration(migrations.Migration):
                         validators=[
                             django.core.validators.RegexValidator(
                                 code="invalid_user_last_name",
-                                message="Фамилия может содержать только буквы, пробел и дефис",
+                                message="Введены недопустимые символы.",
                                 regex="^[а-яА-ЯёЁa-zA-Z]+(\\s?\\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                            )
+                            ),
+                            django.core.validators.MinLengthValidator(
+                                limit_value=2
+                            ),
                         ],
                         verbose_name="Фамилия",
                     ),
