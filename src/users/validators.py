@@ -32,6 +32,13 @@ class PasswordLengthValidator:
         self.min_length = min_length
         self.max_length = max_length
 
+    def get_help_text(self, password=None, user=None):
+        """Вывод требования длины пароля."""
+        return (
+            f"Пароль должен содержать от {self.min_length} "
+            f"до {self.max_length} символов."
+        )
+
     def validate(self, password, user=None):
         """Валидация длины пароля."""
         if not self.min_length <= len(password) <= self.max_length:

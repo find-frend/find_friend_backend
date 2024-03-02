@@ -23,6 +23,7 @@ class UserFilter(filters.FilterSet):
             "sex",
             "age",
             "city",
+            "city__name",
             "interests",
             "profession",
             "purpose",
@@ -49,11 +50,11 @@ class UserFilter(filters.FilterSet):
 class EventsFilter(filters.FilterSet):
     """Класс фильтрации мероприятий."""
 
-    interests = filters.AllValuesMultipleFilter(field_name="interests__name")
+    # interests = filters.AllValuesMultipleFilter(field_name="interests__name")
 
     class Meta:
         model = Event
-        fields = ["event_type", "date", "city"]
+        fields = ["event_type", "date", "city", "city__name"]
 
 
 class EventSearchFilter(SearchFilter):

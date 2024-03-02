@@ -3,6 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
+from config import settings
 from events.models import Event, EventMember
 from users.models import City, Friend, Interest, User, UserInterest
 from users.validators import (
@@ -57,9 +58,21 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         required=False,
         allow_null=True,
     )
-    interests = InterestSerializer(many=True)
-    age = serializers.IntegerField()
-    friends_count = serializers.IntegerField()
+    first_name = serializers.CharField(
+        max_length=settings.MAX_LENGTH_CHAR,
+        min_length=settings.MIN_LENGTH_CHAR,
+        allow_blank=False,
+        required=False,
+    )
+    last_name = serializers.CharField(
+        max_length=settings.MAX_LENGTH_CHAR,
+        min_length=settings.MIN_LENGTH_CHAR,
+        allow_blank=False,
+        required=False,
+    )
+    interests = InterestSerializer(many=True, required=False)
+    age = serializers.IntegerField(required=False)
+    friends_count = serializers.IntegerField(required=False)
 
     class Meta:
         model = User
@@ -147,7 +160,7 @@ class MyUserGetSerializer(UserSerializer):
         required=False,
         allow_null=True,
     )
-    age = serializers.IntegerField()
+    age = serializers.IntegerField(required=False)
 
     class Meta:
         model = User
@@ -212,7 +225,7 @@ class FriendSerializer(ModelSerializer):
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
 
-    interests = InterestSerializer(many=True)
+    # interests = InterestSerializer(many=True)
 
     class Meta:
         model = Event
@@ -220,7 +233,7 @@ class EventSerializer(ModelSerializer):
             "id",
             "name",
             "description",
-            "interests",
+            # "interests",
             "members",
             "event_type",
             "date",

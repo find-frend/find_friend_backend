@@ -101,6 +101,7 @@ class CityFilter(AutocompleteFilter):
 
     title = "Город"
     field_name = "city"
+    use_pk_exact = False
 
 
 @admin.register(User)
