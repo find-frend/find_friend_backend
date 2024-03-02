@@ -4,7 +4,7 @@ from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 
-from .views import EventViewSet, FriendRequestViewSet, MyUserViewSet
+from .views import EventViewSet, FriendRequestViewSet, InterestViewSet, MyUserViewSet
 
 app_name = "api"
 
@@ -12,8 +12,8 @@ router = DefaultRouter()
 
 router.register("users", MyUserViewSet, basename="users")
 router.register("events", EventViewSet, basename="events")
+router.register("interests", InterestViewSet, basename="interests")
 router.register(r"friends", FriendRequestViewSet, basename="friends")
-
 
 urlpatterns = [
     path("", include(router.urls)),
