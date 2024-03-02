@@ -2,7 +2,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import filters
+from rest_framework import filters, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
@@ -11,13 +14,14 @@ from users.models import Friend, Interest, User
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly
-from .serializers import (  # MyUserGetSerializer,
-    EventSerializer,
-    FriendSerializer,
-    InterestSerializer,
-    MyUserCreateSerializer,
-    MyUserSerializer,
-)
+from .serializers import (
+  EventSerializer,
+  FriendSerializer,
+  InterestSerializer,
+  # MyUserGetSerializer,
+  MyUserCreateSerializer,
+  MyUserSerializer)
+from .services import FriendRequestService
 
 
 class MyUserViewSet(UserViewSet):
@@ -78,12 +82,38 @@ class MyUserViewSet(UserViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class FriendViewSet(ModelViewSet):
-    """Вьюсет друга пользователя."""
-
-    queryset = Friend.objects.all()
+class FriendRequestViewSet(ModelViewSet):
+    """Вьюсет добавления в друзья."""
     serializer_class = FriendSerializer
-    pagination_class = MyPagination
+    permission_classes = [IsAuthenticated,]
+
+    def get_queryset(self):
+        return FriendRequestService.get_user_friend_requests(self.request.user)
+
+    def perform_create(self, serializer):
+        friend_id = self.request.data.get('friend')
+        if friend_id is not None:
+            serializer.save(initiator=self.request.user, friend_id=friend_id)
+        else:
+            raise ValueError("ID друга не был передан")
+
+    # def perform_create(self, serializer):
+    #     FriendRequestService.create_friend_request(serializer,
+    #                                                self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='accept')
+    def accept_request(self, request, pk=None):
+        message = FriendRequestService.respond_to_friend_request(pk,
+                                                                 request.user,
+                                                                 True)
+        return Response({"message": message}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='decline')
+    def decline_request(self, request, pk=None):
+        message = FriendRequestService.respond_to_friend_request(pk,
+                                                                 request.user,
+                                                                 False)
+        return Response({"message": message}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={

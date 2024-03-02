@@ -121,7 +121,7 @@ class User(AbstractUser):
         help_text="Интересы пользователя",
     )
     friends = models.ManyToManyField(
-        "User",
+        "self",
         through="Friend",
         blank=True,
         verbose_name="Друзья",
@@ -288,16 +288,10 @@ class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        validators=[validate_initiator],
-        related_name="initiator",
+        User, on_delete=models.CASCADE, related_name="sent_requests"
     )
     friend = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        validators=[validate_friend],
-        related_name="friend",
+        User, on_delete=models.CASCADE, related_name="received_requests"
     )
     is_added = models.BooleanField(default=False)
 
@@ -313,6 +307,3 @@ class Friend(models.Model):
         ]
         verbose_name = "Друг"
         verbose_name_plural = "Друзья"
-
-    def __str__(self):
-        return f"{self.friend} в друзьях у {self.initiator}"
