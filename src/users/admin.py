@@ -68,7 +68,7 @@ class AgeFilter(admin.SimpleListFilter):
             ("80", "80-90 лет"),
             ("90", "90-100 лет"),
             ("100", "100-110 лет"),
-            ("110", "110-120 лет"),
+            ("110", "Старше 110 лет"),
         ]
 
     def queryset(self, request, queryset):
@@ -80,10 +80,17 @@ class AgeFilter(admin.SimpleListFilter):
         if value == "14":
             start_year = now.year - 20
             end_year = start_year + 6
+        elif value == 110:
+            start_year = now.year - 1000
+            end_year = now.year - 110
         else:
             start_year, end_year = years_count(value)
-        start_date = date(start_year, now.month, now.day)
-        end_date = date(end_year, now.month, now.day) - timedelta(1)
+        now_day = now.day
+        now_month = now.month
+        if now_month == 2 and now_day == 29:
+            now_day -= 1
+        start_date = date(start_year, now_month, now_day)
+        end_date = date(end_year, now_month, now_day) - timedelta(1)
         return queryset.filter(
             birthday__gte=start_date, birthday__lte=end_date
         )

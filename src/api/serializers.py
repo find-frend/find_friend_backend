@@ -4,6 +4,12 @@ from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from events.models import Event, EventMember
 from users.models import City, Friend, Interest, User, UserInterest
+from users.validators import (
+    EMAIL_LENGTH_MSG,
+    FIRST_NAME_LENGTH_MSG,
+    INVALID_EMAIL_MSG,
+    LAST_NAME_LENGTH_MSG,
+)
 
 
 class InterestSerializer(ModelSerializer):
@@ -14,7 +20,34 @@ class InterestSerializer(ModelSerializer):
         fields = ("id", "name")
 
 
-class MyUserSerializer(UserSerializer):
+class MyUserBaseSerializer(serializers.Serializer):
+    """Базовый сериализатор пользователя."""
+
+    class Meta:
+        extra_kwargs = {
+            "email": {
+                "error_messages": {
+                    "max_length": EMAIL_LENGTH_MSG,
+                    "min_length": EMAIL_LENGTH_MSG,
+                    "invalid": INVALID_EMAIL_MSG,
+                }
+            },
+            "first_name": {
+                "error_messages": {
+                    "max_length": FIRST_NAME_LENGTH_MSG,
+                    "min_length": FIRST_NAME_LENGTH_MSG,
+                }
+            },
+            "last_name": {
+                "error_messages": {
+                    "max_length": LAST_NAME_LENGTH_MSG,
+                    "min_length": LAST_NAME_LENGTH_MSG,
+                }
+            },
+        }
+
+
+class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     """Сериализатор пользователя."""
 
     city = SlugRelatedField(
@@ -47,6 +80,7 @@ class MyUserSerializer(UserSerializer):
             "network_nick",
             "additionally",
         )
+        extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
@@ -90,7 +124,7 @@ class MyUserSerializer(UserSerializer):
         return super().update(instance, validated_data)
 
 
-class MyUserCreateSerializer(UserCreateSerializer):
+class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
     """Сериализатор создания пользователя."""
 
     class Meta:
@@ -100,6 +134,7 @@ class MyUserCreateSerializer(UserCreateSerializer):
             "password",
             "birthday",
         )
+        extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
 
 class MyUserGetSerializer(UserSerializer):
@@ -164,6 +199,7 @@ class FriendSerializer(ModelSerializer):
     #             code=status.HTTP_400_BAD_REQUEST,
     #         )
     #     return data
+
 
 
 class EventSerializer(ModelSerializer):
