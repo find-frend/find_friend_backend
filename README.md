@@ -96,7 +96,7 @@ DB_PORT=5432
 2. Перейти в директорию с файлом _docker-compose.dev.yaml_, открыть терминал и запустить docker-compose с ключом `-d`:
 
 ```
-cd infra/
+cd infra/dev/
 ```
 
 ```

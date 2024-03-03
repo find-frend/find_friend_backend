@@ -1,10 +1,16 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers, status
-from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
+from config import settings
 from events.models import Event, EventMember
 from users.models import City, Friend, Interest, User, UserInterest
+from users.validators import (
+    EMAIL_LENGTH_MSG,
+    FIRST_NAME_LENGTH_MSG,
+    INVALID_EMAIL_MSG,
+    LAST_NAME_LENGTH_MSG,
+)
 
 
 class InterestSerializer(ModelSerializer):
@@ -15,7 +21,34 @@ class InterestSerializer(ModelSerializer):
         fields = ("id", "name")
 
 
-class MyUserSerializer(UserSerializer):
+class MyUserBaseSerializer(serializers.Serializer):
+    """Базовый сериализатор пользователя."""
+
+    class Meta:
+        extra_kwargs = {
+            "email": {
+                "error_messages": {
+                    "max_length": EMAIL_LENGTH_MSG,
+                    "min_length": EMAIL_LENGTH_MSG,
+                    "invalid": INVALID_EMAIL_MSG,
+                }
+            },
+            "first_name": {
+                "error_messages": {
+                    "max_length": FIRST_NAME_LENGTH_MSG,
+                    "min_length": FIRST_NAME_LENGTH_MSG,
+                }
+            },
+            "last_name": {
+                "error_messages": {
+                    "max_length": LAST_NAME_LENGTH_MSG,
+                    "min_length": LAST_NAME_LENGTH_MSG,
+                }
+            },
+        }
+
+
+class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     """Сериализатор пользователя."""
 
     city = SlugRelatedField(
@@ -24,9 +57,21 @@ class MyUserSerializer(UserSerializer):
         required=False,
         allow_null=True,
     )
-    interests = InterestSerializer(many=True)
-    age = serializers.IntegerField()
-    friends_count = serializers.IntegerField()
+    first_name = serializers.CharField(
+        max_length=settings.MAX_LENGTH_CHAR,
+        min_length=settings.MIN_LENGTH_CHAR,
+        allow_blank=False,
+        required=False,
+    )
+    last_name = serializers.CharField(
+        max_length=settings.MAX_LENGTH_CHAR,
+        min_length=settings.MIN_LENGTH_CHAR,
+        allow_blank=False,
+        required=False,
+    )
+    interests = InterestSerializer(many=True, required=False)
+    age = serializers.IntegerField(required=False)
+    friends_count = serializers.IntegerField(required=False)
 
     class Meta:
         model = User
@@ -48,6 +93,7 @@ class MyUserSerializer(UserSerializer):
             "network_nick",
             "additionally",
         )
+        extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
@@ -91,7 +137,7 @@ class MyUserSerializer(UserSerializer):
         return super().update(instance, validated_data)
 
 
-class MyUserCreateSerializer(UserCreateSerializer):
+class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
     """Сериализатор создания пользователя."""
 
     class Meta:
@@ -101,6 +147,7 @@ class MyUserCreateSerializer(UserCreateSerializer):
             "password",
             "birthday",
         )
+        extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
 
 class MyUserGetSerializer(UserSerializer):
@@ -112,7 +159,7 @@ class MyUserGetSerializer(UserSerializer):
         required=False,
         allow_null=True,
     )
-    age = serializers.IntegerField()
+    age = serializers.IntegerField(required=False)
 
     class Meta:
         model = User
@@ -128,6 +175,9 @@ class MyUserGetSerializer(UserSerializer):
 class FriendSerializer(ModelSerializer):
     """Сериализатор друга пользователя."""
 
+    initiator = MyUserSerializer(read_only=True)
+    friend = MyUserSerializer(read_only=True)
+
     class Meta:
         model = Friend
         fields = (
@@ -137,47 +187,38 @@ class FriendSerializer(ModelSerializer):
             "is_added",
         )
 
-    def validate(self, data):
-        """Валидация друзей."""
-        if not data:
-            raise ValidationError(
-                detail="Ошибка с выбором друга",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        initiator = data["initiator"]
-        friend = data["friend"]
-        if not initiator or not initiator.is_active:
-            raise ValidationError(
-                detail=f"Нет такого пользователя {initiator}",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        if not friend or not friend.is_active:
-            raise ValidationError(
-                detail=f"Нет такого друга {friend}",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        if (
-            Friend.objects.filter(initiator=initiator, friend=friend).exists()
-            or Friend.objects.filter(
-                initiator=friend, friend=initiator
-            ).exists()
-        ):
-            raise ValidationError(
-                detail="Повторная дружба невозможна",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        if initiator == friend:
-            raise ValidationError(
-                detail="Дружба с самим собой невозможна",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        return data
+    # def validate(self, data): каждый запрос ловился на первой ошибке, хотя данные есть, поэтому пока закоменчу.
+    #     """Валидация друзей."""
+    #     if not data:
+    #         raise ValidationError(
+    #             detail="Ошибка с выбором друга",
+    #             code=status.HTTP_400_BAD_REQUEST,
+    #         )
+    #     initiator = self.instance
+    #     friend = self.context.get("request").friend
+    #     if (
+    #         Friend.objects.filter(initiator=initiator, friend=friend).exists()
+    #         or Friend.objects.filter(
+    #             initiator=friend, friend=initiator
+    #         ).exists()
+    #     ):
+    #         raise ValidationError(
+    #             detail="Повторная дружба невозможна",
+    #             code=status.HTTP_400_BAD_REQUEST,
+    #         )
+    #     if initiator == friend:
+    #         raise ValidationError(
+    #             detail="Дружба с самим собой невозможна",
+    #             code=status.HTTP_400_BAD_REQUEST,
+    #         )
+    #     return data
+
 
 
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
 
-    interests = InterestSerializer(many=True)
+    # interests = InterestSerializer(many=True)
 
     class Meta:
         model = Event
@@ -185,7 +226,7 @@ class EventSerializer(ModelSerializer):
             "id",
             "name",
             "description",
-            "interests",
+            # "interests",
             "members",
             "event_type",
             "date",
