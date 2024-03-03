@@ -18,6 +18,16 @@ ALLOWED_HOSTS = (
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.yandex.ru"
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+
+EMAIL_HOST_USER = "vistertia08@yandex.ru"
+EMAIL_HOST_PASSWORD = "*"
+DEFAULT_FROM_EMAIL = "vistertia08@yandex.ru"
+
 DJANGO_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
@@ -148,6 +158,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DJOSER = {
+    "PASSWORD_RESET_CONFIRM_URL": "reset/password/reset/confirm/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL": "#/username/reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "#/activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": True,
     "SERIALIZERS": {
         "user": "api.serializers.MyUserSerializer",
         "user_create": "api.serializers.MyUserCreateSerializer",
@@ -157,6 +171,12 @@ DJOSER = {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
         "user_list": ["rest_framework.permissions.IsAuthenticated"],
         "activation": ["rest_framework.permissions.IsAdminUser"],
+    },
+    "EMAIL": {
+        "activation": "user_profile.email.ActivationEmail",
+        "confirmation": "user_profile.email.ConfirmationEmail",
+        "password_reset": "user_profile.email.PasswordResetEmail",
+        "password_changed_confirmation": "user_profile.email.PasswordChangedConfirmationEmail",
     },
     "HIDE_USERS": False,
 }
