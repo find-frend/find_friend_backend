@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import Friend, Interest, User
+from users.models import Interest, User, # Friend, 
 
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
