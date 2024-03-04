@@ -25,6 +25,5 @@ class FriendRequestService:
             friend_request.is_added = True
             friend_request.save()
             return "Заявка была принята."
-        else:
-            friend_request.delete()
-            return "Заявка была отклонена."
+        friend_request.delete()
+        return "Заявка была отклонена."
