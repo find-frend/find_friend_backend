@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = (
-    ["127.0.0.1", "localhost", "213.189.221.246", "backend"]
+    ["127.0.0.1", "localhost", "158.160.60.2", "backend"]
     if DEBUG
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
@@ -61,8 +61,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://*.127.0.0.1",
     "https://*.localhost",
     "https://*.127.0.0.1",
-    "https://*.213.189.221.246",
-    "http://*.213.189.221.246",
+    "https://*.158.160.60.2",
+    "http://*.158.160.60.2",
 ]
 
 TEMPLATES = [
@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "users.validators.PasswordLengthValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -189,7 +189,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+MIN_LENGTH_EMAIL = 5
 MAX_LENGTH_EMAIL = 254
+MIN_LENGTH_CHAR = 2
 MAX_LENGTH_CHAR = 150
 MAX_LENGTH_EVENT = 50
+MIN_LENGTH_PASSWORD = 8
+MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500

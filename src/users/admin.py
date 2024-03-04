@@ -101,6 +101,7 @@ class CityFilter(AutocompleteFilter):
 
     title = "Город"
     field_name = "city"
+    use_pk_exact = False
 
 
 @admin.register(User)
@@ -201,4 +202,5 @@ class FriendAdmin(admin.ModelAdmin):
         "initiator",
         "friend",
         "is_added",
+        "id",
     )

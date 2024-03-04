@@ -3,7 +3,7 @@ from datetime import date
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +16,7 @@ from config.settings import (
 )
 
 from .utils import make_thumbnail
-from .validators import validate_birthday
+from .validators import INVALID_SYMBOLS_MSG, validate_birthday
 
 
 class City(models.Model):
@@ -87,9 +87,10 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message="Имя может содержать только буквы, пробел и дефис",
+                message=INVALID_SYMBOLS_MSG,
                 code="invalid_user_first_name",
             ),
+            MinLengthValidator(limit_value=2),
         ],
     )
     last_name = models.CharField(
@@ -100,9 +101,10 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message="Фамилия может содержать только буквы, пробел и дефис",
+                message=INVALID_SYMBOLS_MSG,
                 code="invalid_user_last_name",
             ),
+            MinLengthValidator(limit_value=2),
         ],
     )
     birthday = models.DateField(
@@ -119,7 +121,7 @@ class User(AbstractUser):
         help_text="Интересы пользователя",
     )
     friends = models.ManyToManyField(
-        "User",
+        "self",
         through="Friend",
         blank=True,
         verbose_name="Друзья",
@@ -286,16 +288,10 @@ class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        validators=[validate_initiator],
-        related_name="initiator",
+        User, on_delete=models.CASCADE, related_name="sent_requests"
     )
     friend = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        validators=[validate_friend],
-        related_name="friend",
+        User, on_delete=models.CASCADE, related_name="received_requests"
     )
     is_added = models.BooleanField(default=False)
 
@@ -311,6 +307,3 @@ class Friend(models.Model):
         ]
         verbose_name = "Друг"
         verbose_name_plural = "Друзья"
-
-    def __str__(self):
-        return f"{self.friend} в друзьях у {self.initiator}"
