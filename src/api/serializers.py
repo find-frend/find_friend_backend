@@ -187,7 +187,8 @@ class FriendSerializer(ModelSerializer):
             "is_added",
         )
 
-    # def validate(self, data): каждый запрос ловился на первой ошибке, хотя данные есть, поэтому пока закоменчу.
+    # def validate(self, data): каждый запрос ловился на первой ошибке,
+    #    хотя данные есть, поэтому пока закоменчу.
     #     """Валидация друзей."""
     #     if not data:
     #         raise ValidationError(
@@ -212,7 +213,6 @@ class FriendSerializer(ModelSerializer):
     #             code=status.HTTP_400_BAD_REQUEST,
     #         )
     #     return data
-
 
 
 class EventSerializer(ModelSerializer):
