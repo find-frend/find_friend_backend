@@ -24,9 +24,9 @@ EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 
-EMAIL_HOST_USER = "vistertia08@yandex.ru"
-EMAIL_HOST_PASSWORD = "*"
-DEFAULT_FROM_EMAIL = "vistertia08@yandex.ru"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
 DJANGO_APPS = (
     "django.contrib.admin",
@@ -158,11 +158,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DJOSER = {
+    "LOGIN_FIELD": "email",
+    # 'USER_CREATE_PASSWORD_RETYPE': True,
+    # 'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
+    # 'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    # 'SEND_CONFIRMATION_EMAIL': True,
+    # 'SET_USERNAME_RETYPE': True,
+    # 'SET_PASSWORD_RETYPE': True,
     "PASSWORD_RESET_CONFIRM_URL": "reset/password/reset/confirm/{uid}/{token}",
     "USERNAME_RESET_CONFIRM_URL": "#/username/reset/confirm/{uid}/{token}",
     "ACTIVATION_URL": "#/activate/{uid}/{token}",
-    "SEND_ACTIVATION_EMAIL": True,
+    # "SEND_ACTIVATION_EMAIL": False,
     "SERIALIZERS": {
+        "password_reset": "djoser.serializers.SendEmailResetSerializer",
         "user": "api.serializers.MyUserSerializer",
         "user_create": "api.serializers.MyUserCreateSerializer",
         "current_user": "api.serializers.MyUserSerializer",
@@ -172,12 +180,12 @@ DJOSER = {
         "user_list": ["rest_framework.permissions.IsAuthenticated"],
         "activation": ["rest_framework.permissions.IsAdminUser"],
     },
-    "EMAIL": {
-        "activation": "user_profile.email.ActivationEmail",
-        "confirmation": "user_profile.email.ConfirmationEmail",
-        "password_reset": "user_profile.email.PasswordResetEmail",
-        "password_changed_confirmation": "user_profile.email.PasswordChangedConfirmationEmail",
-    },
+    # "EMAIL": {
+    #     "activation": "user_profile.email.ActivationEmail",
+    #     "confirmation": "user_profile.email.ConfirmationEmail",
+    #     "password_reset": "user_profile.email.PasswordResetEmail",
+    #     "password_changed_confirmation": "user_profile.email.PasswordChangedConfirmationEmail",
+    # },
     "HIDE_USERS": False,
 }
 

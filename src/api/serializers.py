@@ -1,4 +1,7 @@
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import (  # UserCreatePasswordRetypeSerializer,
+    UserCreateSerializer,
+    UserSerializer,
+)
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
@@ -149,6 +152,12 @@ class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
         )
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
+    # def get_user(self):
+    #     try:
+    #         return User.objects.get(pk=self.user_id)
+    #     except User.DoesNotExist:
+    #         return None
+
 
 class MyUserGetSerializer(UserSerializer):
     """Сериализатор пользователя."""
@@ -187,7 +196,8 @@ class FriendSerializer(ModelSerializer):
             "is_added",
         )
 
-    # def validate(self, data): каждый запрос ловился на первой ошибке, хотя данные есть, поэтому пока закоменчу.
+    # def validate(self, data): каждый запрос ловился на первой ошибке,
+    #     хотя данные есть, поэтому пока закоменчу.
     #     """Валидация друзей."""
     #     if not data:
     #         raise ValidationError(
@@ -197,7 +207,7 @@ class FriendSerializer(ModelSerializer):
     #     initiator = self.instance
     #     friend = self.context.get("request").friend
     #     if (
-    #         Friend.objects.filter(initiator=initiator, friend=friend).exists()
+    #        Friend.objects.filter(initiator=initiator, friend=friend).exists()
     #         or Friend.objects.filter(
     #             initiator=friend, friend=initiator
     #         ).exists()
@@ -212,7 +222,6 @@ class FriendSerializer(ModelSerializer):
     #             code=status.HTTP_400_BAD_REQUEST,
     #         )
     #     return data
-
 
 
 class EventSerializer(ModelSerializer):
@@ -281,3 +290,17 @@ class EventSerializer(ModelSerializer):
             current_member = User.objects.get(**member)
             EventMember.objects.create(event=instance, member=current_member)
         return super().update(instance, validated_data)
+
+
+# class CustomUserCreatePasswordRetypeSerializer(
+#     UserCreatePasswordRetypeSerializer
+# ):
+#     class Meta(UserCreatePasswordRetypeSerializer.Meta):
+#         fields = [
+#             "id",
+#             "username",
+#             "password",
+#             "email",
+#             "first_name",
+#             "last_name",
+#         ]
