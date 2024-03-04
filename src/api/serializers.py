@@ -1,3 +1,4 @@
+from django.db.models import Q
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
@@ -72,6 +73,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     interests = InterestSerializer(many=True, required=False)
     age = serializers.IntegerField(required=False)
     friends_count = serializers.IntegerField(required=False)
+    network_nick = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -94,6 +96,20 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             "additionally",
         )
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
+
+    def get_network_nick(self, obj):
+        request = self.context.get("request")
+
+        if (
+            Friend.objects.filter(is_added=True)
+            .filter(
+                Q(initiator=request.user, friend=obj)
+                | Q(initiator=obj, friend=request.user)
+            )
+            .exists()
+        ):
+            return obj.network_nick
+        return None
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
@@ -212,7 +228,6 @@ class FriendSerializer(ModelSerializer):
     #             code=status.HTTP_400_BAD_REQUEST,
     #         )
     #     return data
-
 
 
 class EventSerializer(ModelSerializer):
