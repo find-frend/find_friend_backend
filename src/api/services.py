@@ -9,8 +9,8 @@ class FriendRequestService:
     @staticmethod
     def get_user_friend_requests(user):
         return Friend.objects.filter(initiator=user).select_related(
-            'friend') | \
-            Friend.objects.filter(friend=user).select_related('initiator')
+            'friend') | Friend.objects.filter(
+            friend=user).select_related('initiator')
 
     @staticmethod
     def create_friend_request(serializer, user):
