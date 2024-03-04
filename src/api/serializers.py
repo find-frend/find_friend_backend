@@ -1,5 +1,7 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers
+from rest_framework import serializers  # , status
+
+# from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
@@ -48,6 +50,14 @@ class MyUserBaseSerializer(serializers.Serializer):
         }
 
 
+class GetFriendsField(serializers.RelatedField):
+    """Сериализатор списка друзей."""
+
+    def to_representation(self, value):
+        """Представление списка друзей."""
+        return {"id": value.pk}
+
+
 class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     """Сериализатор пользователя."""
 
@@ -70,6 +80,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         required=False,
     )
     interests = InterestSerializer(many=True, required=False)
+    friends = GetFriendsField(read_only=True, many=True, required=False)
     age = serializers.IntegerField(required=False)
     friends_count = serializers.IntegerField(required=False)
 
@@ -97,43 +108,68 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
-        if "interests" not in self.initial_data:
-            return User.objects.create(**validated_data)
-        interests = validated_data.pop("interests")
-        if "friends" not in self.initial_data:
-            return User.objects.create(**validated_data)
-        friends = validated_data.pop("friends")
+        is_interests = False
+        is_friends = False
+        if "interests" in self.initial_data:
+            interests = validated_data.pop("interests")
+            is_interests = True
+        if "friends" in self.initial_data:
+            friends = self.initial_data.pop("friends")
+            is_friends = True
         user = User.objects.create(**validated_data)
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            UserInterest.objects.create(user=user, interest=current_interest)
-        for friend in friends:
-            current_friend = User.objects.get(**friend)
-            Friend.objects.create(
-                initiator=user, friend=current_friend, is_added=friend.is_added
-            )
+        if is_interests:
+            for interest in interests:
+                current_interest = Interest.objects.get(**interest)
+                UserInterest.objects.create(
+                    user=user, interest=current_interest
+                )
+        if is_friends:
+            is_addeds = []
+            for friend in friends:
+                x = Friend.objects.filter(initiator=user, friend=friend["id"])
+                if x:
+                    is_addeds.append(x[0].is_added)
+                else:
+                    is_addeds.append(False)
+            for i, friend in enumerate(friends):
+                current_friend = User.objects.get(**friend)
+                Friend.objects.create(
+                    initiator=user,
+                    friend=current_friend,
+                    is_added=is_addeds[i],
+                )
         return user
 
     def update(self, instance, validated_data):
         """Обновление пользователя с указанными интересами и друзьями."""
-        if "interests" not in self.initial_data:
-            return super().update(instance, validated_data)
-        interests = validated_data.pop("interests")
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            UserInterest.objects.create(
-                user=instance, interest=current_interest
-            )
-        if "friends" not in self.initial_data:
-            return super().update(instance, validated_data)
-        friends = validated_data.pop("friends")
-        for friend in friends:
-            current_friend = User.objects.get(**friend)
-            Friend.objects.create(
-                initiator=instance,
-                friend=current_friend,
-                is_added=friend.is_added,
-            )
+        if "interests" in self.initial_data:
+            interests = validated_data.pop("interests")
+            instance.interests.clear()
+            for interest in interests:
+                current_interest = Interest.objects.get(**interest)
+                UserInterest.objects.create(
+                    user=instance, interest=current_interest
+                )
+        if "friends" in self.initial_data:
+            # friends = validated_data.pop("friends")
+            friends = self.initial_data.pop("friends")
+            is_addeds = []
+            for friend in friends:
+                x = Friend.objects.filter(
+                    initiator=instance, friend=friend["id"]
+                )
+                if x:
+                    is_addeds.append(x[0].is_added)
+                else:
+                    is_addeds.append(False)
+            instance.friends.clear()
+            for i, friend in enumerate(friends):
+                current_friend = User.objects.get(**friend)
+                Friend.objects.create(
+                    initiator=instance,
+                    friend=current_friend,
+                    is_added=is_addeds[i],
+                )
         return super().update(instance, validated_data)
 
 
@@ -187,38 +223,61 @@ class FriendSerializer(ModelSerializer):
             "is_added",
         )
 
-    # def validate(self, data): каждый запрос ловился на первой ошибке, хотя данные есть, поэтому пока закоменчу.
-    #     """Валидация друзей."""
-    #     if not data:
-    #         raise ValidationError(
-    #             detail="Ошибка с выбором друга",
-    #             code=status.HTTP_400_BAD_REQUEST,
-    #         )
-    #     initiator = self.instance
-    #     friend = self.context.get("request").friend
-    #     if (
-    #         Friend.objects.filter(initiator=initiator, friend=friend).exists()
-    #         or Friend.objects.filter(
-    #             initiator=friend, friend=initiator
-    #         ).exists()
-    #     ):
-    #         raise ValidationError(
-    #             detail="Повторная дружба невозможна",
-    #             code=status.HTTP_400_BAD_REQUEST,
-    #         )
-    #     if initiator == friend:
-    #         raise ValidationError(
-    #             detail="Дружба с самим собой невозможна",
-    #             code=status.HTTP_400_BAD_REQUEST,
-    #         )
-    #     return data
+    '''
+    def validate(self, data):
+        """Валидация друзей."""
+        if not data:
+            raise ValidationError(
+                detail="Ошибка с выбором друга",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        initiator = data.get("initiator")
+        friend = data.get("friend")
 
+        print(initiator)
+        print(friend)
+
+        if not initiator or not initiator.is_active:
+            raise ValidationError(
+                detail=f"Нет такого пользователя {initiator}",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if not friend or not friend.is_active:
+            raise ValidationError(
+                detail=f"Нет такого друга {friend}",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if initiator == friend:
+            raise ValidationError(
+                detail="Дружба с самим собой невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if (
+            Friend.objects.filter(initiator=initiator, friend=friend).exists()
+            or Friend.objects.filter(
+                initiator=friend, friend=initiator).exists()
+        ):
+            raise ValidationError(
+                detail="Повторная дружба невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
+        '''
+
+
+class GetMembersField(serializers.RelatedField):
+    """Сериализатор списка участников мероприятия."""
+
+    def to_representation(self, value):
+        """Представление списка участников мероприятия."""
+        return {"id": value.pk}
 
 
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
 
     # interests = InterestSerializer(many=True)
+    members = GetMembersField(read_only=True, many=True, required=False)
 
     class Meta:
         model = Event
@@ -266,18 +325,50 @@ class EventSerializer(ModelSerializer):
         """Создание мероприятия с указанными участниками."""
         if "members" not in self.initial_data:
             return Event.objects.create(**validated_data)
-        members = validated_data.pop("members")
+        # members = validated_data.pop("members")
+        members = self.initial_data.pop("members")
         event = Event.objects.create(**validated_data)
+        is_organizers = []
         for member in members:
+            x = EventMember.objects.filter(event=event, user=member["id"])
+            if x:
+                is_organizers.append(x[0].is_organizer)
+            else:
+                is_organizers.append(False)
+        for i, member in enumerate(members):
             current_member = User.objects.get(**member)
-            EventMember.objects.create(event=event, member=current_member)
+            EventMember.objects.create(
+                event=event, user=current_member, is_organizer=is_organizers[i]
+            )
         return event
 
     def update(self, instance, validated_data):
         """Обновление мероприятия с указанными участниками."""
         if "members" not in self.initial_data:
-            members = validated_data.pop("members")
+            return super().update(instance, validated_data)
+        # members = validated_data.pop("members")
+        members = self.initial_data.pop("members")
+        is_organizers = []
         for member in members:
+            x = EventMember.objects.filter(event=instance, user=member["id"])
+            if x:
+                is_organizers.append(x[0].is_organizer)
+            else:
+                is_organizers.append(False)
+        instance.members.clear()
+        for i, member in enumerate(members):
             current_member = User.objects.get(**member)
-            EventMember.objects.create(event=instance, member=current_member)
+            EventMember.objects.create(
+                event=instance,
+                user=current_member,
+                is_organizer=is_organizers[i],
+            )
         return super().update(instance, validated_data)
+
+
+class CitySerializer(ModelSerializer):
+    """Сериализатор городов."""
+
+    class Meta:
+        model = City
+        fields = ("id", "name")
