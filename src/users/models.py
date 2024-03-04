@@ -1,12 +1,16 @@
+import os
 from datetime import date
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+
+from PIL import Image
 
 from config.settings import (
     MAX_LENGTH_CHAR,
@@ -15,12 +19,8 @@ from config.settings import (
     MAX_LENGTH_EVENT,
 )
 
-from .utils import make_thumbnail
-from .validators import (
-    INVALID_SYMBOLS_MSG,
-    validate_birthday,
-    validate_size_file,
-)
+# from .utils import make_thumbnail
+from .validators import INVALID_SYMBOLS_MSG, validate_birthday
 
 
 class City(models.Model):
@@ -143,7 +143,6 @@ class User(AbstractUser):
         "Аватарка",
         blank=True,
         upload_to="images/user/",
-        validators=[validate_size_file],
     )
     profession = models.CharField(
         "Работа",
@@ -200,11 +199,45 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+    @staticmethod
+    def resize_image(self, image, size=(100, 100)):
+        """Изменение размера изображения с сохранением пропорций."""
+        with Image.open(image) as img:
+            img.thumbnail(size, Image.ANTIALIAS)
+            return img
+
+    def save_resized_image(self, image, filename):
+        """Сохранение измененного изображения."""
+        with ContentFile(b"") as content_file:
+            image.save(content_file, format=image.format)
+            self.avatar.save(filename, content_file, save=False)
+
     def save(self, *args, **kwargs):
-        """Сохранение аватара заданного размера."""
+        """Сохранение аватара заданного размера с проверкой его размера."""
         if self.avatar:
-            self.avatar = make_thumbnail(self.avatar, size=(100, 100))
+            try:
+                filename, ext = os.path.splitext(self.avatar.name)
+                resized_image = self.resize_image(self.avatar)
+                max_file_size_mb = self.max_file_size / (1024 * 1024)
+                if resized_image.tell() > self.max_file_size:
+                    raise ValidationError(
+                        "Размер файла превышает допустимый лимит. "
+                        f"Максимальный размер файла: {max_file_size_mb} MB."
+                    )
+                self.save_resized_image(resized_image, filename)
+            except OSError as e:
+                raise ValidationError(f"Ошибка при сохранении аватара: {e}")
+            except ValidationError as e:
+                raise ValidationError(
+                    f"Ошибка при изменении размера изображения: {e}"
+                )
+
         super().save(*args, **kwargs)
+
+    @property
+    def max_file_size(self):
+        """Максимальный размер файла (в байтах)."""
+        return 8 * 1024 * 1024
 
     def age(self):
         """Вычисление возраста пользователя."""
