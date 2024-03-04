@@ -17,7 +17,6 @@ class Migration(migrations.Migration):
             field=models.ImageField(
                 blank=True,
                 upload_to="images/user/",
-                validators=[users.validators.validate_size_file],
                 verbose_name="Аватарка",
             ),
         ),

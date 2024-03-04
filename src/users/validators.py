@@ -73,14 +73,3 @@ def validate_birthday(birthday):
             "Возраст больше 120 лет! Проверьте дату рождения."
         )
     return birthday
-
-
-def validate_size_file(file):
-    """Проверка размера файла."""
-    max_size_bytes = getattr(settings, "MAX_SIZE_FILE", 8 * 1024 * 1024)
-    max_size_mb = max_size_bytes / (1024 * 1024)
-    if file.size > max_size_bytes:
-        raise ValidationError(
-            "Размер файла превышает допустимый размер. "
-            f"Максимальный размер {max_size_mb} MB."
-        )
