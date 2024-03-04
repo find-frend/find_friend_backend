@@ -33,9 +33,7 @@ class MyUserViewSet(UserViewSet):
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = UserFilter
     search_fields = ["email", "first_name", "last_name"]
-    permission_classes = [
-        IsAdminOrAuthorOrReadOnly,
-    ]
+    permission_classes = [IsAdminOrAuthorOrReadOnly,]
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
