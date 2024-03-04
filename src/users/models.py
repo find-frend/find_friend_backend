@@ -16,7 +16,11 @@ from config.settings import (
 )
 
 from .utils import make_thumbnail
-from .validators import INVALID_SYMBOLS_MSG, validate_birthday
+from .validators import (
+    INVALID_SYMBOLS_MSG,
+    validate_birthday,
+    validate_size_file,
+)
 
 
 class City(models.Model):
@@ -139,6 +143,7 @@ class User(AbstractUser):
         "Аватарка",
         blank=True,
         upload_to="images/user/",
+        validators=[validate_size_file],
     )
     profession = models.CharField(
         "Работа",
