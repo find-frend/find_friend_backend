@@ -222,4 +222,5 @@ class CityViewSet(ReadOnlyModelViewSet):
     queryset = City.objects.all()
     serializer_class = CitySerializer
     filter_backends = (CitySearchFilter, DjangoFilterBackend)
+    search_fields = ("^name",)
     pagination_class = None
