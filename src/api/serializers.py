@@ -198,7 +198,7 @@ class FriendSerializer(ModelSerializer):
     #     initiator = self.instance
     #     friend = self.context.get("request").friend
     #     if (
-    #         Friend.objects.filter(initiator=initiator, friend=friend).exists()
+    #       Friend.objects.filter(initiator=initiator, friend=friend).exists()
     #         or Friend.objects.filter(
     #             initiator=friend, friend=initiator
     #         ).exists()
