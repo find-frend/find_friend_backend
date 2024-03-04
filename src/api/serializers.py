@@ -101,13 +101,12 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         request = self.context.get("request")
 
         if (
-            Friend.objects.filter(is_added=True)
-            .filter(
+            Friend.objects.filter(
+                Q(is_added=True),
                 Q(initiator=request.user, friend=obj)
-                | Q(initiator=obj, friend=request.user)
-            )
-            .exists()
-        ):
+                | Q(initiator=obj, friend=request.user),
+            ).exists()
+        ) or obj == request.user:
             return obj.network_nick
         return None
 
