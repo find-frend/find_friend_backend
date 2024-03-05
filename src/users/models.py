@@ -320,3 +320,8 @@ class Friend(models.Model):
         if self.initiator == self.friend:
             raise ValidationError("Дружба с самим собой невозможна")
         super().clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        """Вызов метода валидации дружбы."""
+        self.full_clean()
+        return super().save(*args, **kwargs)

@@ -126,9 +126,11 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         if is_friends:
             is_addeds = []
             for friend in friends:
-                x = Friend.objects.filter(initiator=user, friend=friend["id"])
-                if x:
-                    is_addeds.append(x[0].is_added)
+                friends_list = Friend.objects.filter(
+                    initiator=user, friend=friend["id"]
+                )
+                if friends_list:
+                    is_addeds.append(friends_list[0].is_added)
                 else:
                     is_addeds.append(False)
             for i, friend in enumerate(friends):
@@ -155,11 +157,11 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             friends = self.initial_data.pop("friends")
             is_addeds = []
             for friend in friends:
-                x = Friend.objects.filter(
+                friends_list = Friend.objects.filter(
                     initiator=instance, friend=friend["id"]
                 )
-                if x:
-                    is_addeds.append(x[0].is_added)
+                if friends_list:
+                    is_addeds.append(friends_list[0].is_added)
                 else:
                     is_addeds.append(False)
             instance.friends.clear()
@@ -233,9 +235,6 @@ class FriendSerializer(ModelSerializer):
             )
         initiator = data.get("initiator")
         friend = data.get("friend")
-
-        print(initiator)
-        print(friend)
 
         if not initiator or not initiator.is_active:
             raise ValidationError(
@@ -330,9 +329,11 @@ class EventSerializer(ModelSerializer):
         event = Event.objects.create(**validated_data)
         is_organizers = []
         for member in members:
-            x = EventMember.objects.filter(event=event, user=member["id"])
-            if x:
-                is_organizers.append(x[0].is_organizer)
+            members_list = EventMember.objects.filter(
+                event=event, user=member["id"]
+            )
+            if members_list:
+                is_organizers.append(members_list[0].is_organizer)
             else:
                 is_organizers.append(False)
         for i, member in enumerate(members):
@@ -350,9 +351,11 @@ class EventSerializer(ModelSerializer):
         members = self.initial_data.pop("members")
         is_organizers = []
         for member in members:
-            x = EventMember.objects.filter(event=instance, user=member["id"])
-            if x:
-                is_organizers.append(x[0].is_organizer)
+            members_list = EventMember.objects.filter(
+                event=instance, user=member["id"]
+            )
+            if members_list:
+                is_organizers.append(members_list[0].is_organizer)
             else:
                 is_organizers.append(False)
         instance.members.clear()
