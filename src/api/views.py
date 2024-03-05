@@ -38,7 +38,13 @@ class MyUserViewSet(UserViewSet):
     pagination_class = MyPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = UserFilter
-    search_fields = ["email", "first_name", "last_name"]
+    search_fields = [
+        "email",
+        "first_name",
+        "last_name",
+        "birthday",
+        "city__name",
+    ]
     permission_classes = [
         IsAdminOrAuthorOrReadOnly,
     ]
@@ -166,8 +172,13 @@ class EventViewSet(ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    filter_backends = (EventSearchFilter, DjangoFilterBackend)
+    filter_backends = (
+        EventSearchFilter,
+        filters.SearchFilter,
+        DjangoFilterBackend,
+    )
     filterset_class = EventsFilter
+    search_fields = ("name", "event_type", "date", "city__name")
     pagination_class = EventPagination
     permission_classes = [
         IsAdminOrAuthorOrReadOnly,
@@ -221,6 +232,10 @@ class CityViewSet(ReadOnlyModelViewSet):
 
     queryset = City.objects.all()
     serializer_class = CitySerializer
-    filter_backends = (CitySearchFilter, DjangoFilterBackend)
-    search_fields = ("^name",)
+    filter_backends = (
+        CitySearchFilter,
+        filters.SearchFilter,
+        DjangoFilterBackend,
+    )
+    search_fields = ("name",)
     pagination_class = None
