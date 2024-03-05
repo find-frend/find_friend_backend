@@ -9,18 +9,24 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import Friend, Interest, User
+from users.models import City, Interest, User
 
-from .filters import EventSearchFilter, EventsFilter, UserFilter
+from .filters import (
+    CitySearchFilter,
+    EventSearchFilter,
+    EventsFilter,
+    UserFilter,
+)
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly
+from .serializers import CitySerializer  # MyUserGetSerializer,
 from .serializers import (
-  EventSerializer,
-  FriendSerializer,
-  InterestSerializer,
-  # MyUserGetSerializer,
-  MyUserCreateSerializer,
-  MyUserSerializer)
+    EventSerializer,
+    FriendSerializer,
+    InterestSerializer,
+    MyUserCreateSerializer,
+    MyUserSerializer,
+)
 from .services import FriendRequestService
 
 
@@ -32,7 +38,13 @@ class MyUserViewSet(UserViewSet):
     pagination_class = MyPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = UserFilter
-    search_fields = ["email", "first_name", "last_name"]
+    search_fields = [
+        "email",
+        "first_name",
+        "last_name",
+        "birthday",
+        "city__name",
+    ]
     permission_classes = [
         IsAdminOrAuthorOrReadOnly,
     ]
@@ -84,14 +96,19 @@ class MyUserViewSet(UserViewSet):
 
 class FriendRequestViewSet(ModelViewSet):
     """Вьюсет добавления в друзья."""
+
     serializer_class = FriendSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get_queryset(self):
+        """Вьюсет добавления в друзья."""
         return FriendRequestService.get_user_friend_requests(self.request.user)
 
     def perform_create(self, serializer):
-        friend_id = self.request.data.get('friend')
+        """Вьюсет добавления в друзья."""
+        friend_id = self.request.data.get("friend")
         if friend_id is not None:
             serializer.save(initiator=self.request.user, friend_id=friend_id)
         else:
@@ -101,18 +118,20 @@ class FriendRequestViewSet(ModelViewSet):
     #     FriendRequestService.create_friend_request(serializer,
     #                                                self.request.user)
 
-    @action(detail=True, methods=['post'], url_path='accept')
+    @action(detail=True, methods=["post"], url_path="accept")
     def accept_request(self, request, pk=None):
-        message = FriendRequestService.respond_to_friend_request(pk,
-                                                                 request.user,
-                                                                 True)
+        """Вьюсет добавления в друзья."""
+        message = FriendRequestService.respond_to_friend_request(
+            pk, request.user, True
+        )
         return Response({"message": message}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='decline')
+    @action(detail=True, methods=["post"], url_path="decline")
     def decline_request(self, request, pk=None):
-        message = FriendRequestService.respond_to_friend_request(pk,
-                                                                 request.user,
-                                                                 False)
+        """Вьюсет добавления в друзья."""
+        message = FriendRequestService.respond_to_friend_request(
+            pk, request.user, False
+        )
         return Response({"message": message}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -153,8 +172,13 @@ class EventViewSet(ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    filter_backends = (EventSearchFilter, DjangoFilterBackend)
+    filter_backends = (
+        EventSearchFilter,
+        filters.SearchFilter,
+        DjangoFilterBackend,
+    )
     filterset_class = EventsFilter
+    search_fields = ("name", "event_type", "date", "city__name")
     pagination_class = EventPagination
     permission_classes = [
         IsAdminOrAuthorOrReadOnly,
@@ -200,4 +224,18 @@ class InterestViewSet(ReadOnlyModelViewSet):
     serializer_class = InterestSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ("^name",)
+    pagination_class = None
+
+
+class CityViewSet(ReadOnlyModelViewSet):
+    """Отображение городов."""
+
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+    filter_backends = (
+        CitySearchFilter,
+        filters.SearchFilter,
+        DjangoFilterBackend,
+    )
+    search_fields = ("name",)
     pagination_class = None
