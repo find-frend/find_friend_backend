@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from drf_yasg import openapi
@@ -9,24 +11,16 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import City, Interest, User
+from users.models import City, FriendRequest, Interest, User
 
-from .filters import (
-    CitySearchFilter,
-    EventSearchFilter,
-    EventsFilter,
-    UserFilter,
-)
+from .filters import (CitySearchFilter, EventSearchFilter, EventsFilter,
+                      UserFilter)
 from .pagination import EventPagination, MyPagination
-from .permissions import IsAdminOrAuthorOrReadOnly
+from .permissions import IsAdminOrAuthorOrReadOnly, IsRecipient
 from .serializers import CitySerializer  # MyUserGetSerializer,
-from .serializers import (
-    EventSerializer,
-    FriendSerializer,
-    InterestSerializer,
-    MyUserCreateSerializer,
-    MyUserSerializer,
-)
+from .serializers import (EventSerializer, FriendRequestSerializer,
+                          InterestSerializer, MyUserCreateSerializer,
+                          MyUserSerializer)
 from .services import FriendRequestService
 
 
@@ -107,44 +101,60 @@ class MyUserViewSet(UserViewSet):
 
 
 class FriendRequestViewSet(ModelViewSet):
-    """Вьюсет добавления в друзья."""
+    """
+    ViewSet для управления заявками на дружбу,
+    поддерживает создание, просмотр, принятие и отклонение заявок.
+    """
 
-    serializer_class = FriendSerializer
-    permission_classes = [
-        IsAuthenticated,
-    ]
+    serializer_class = FriendRequestSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Вьюсет добавления в друзья."""
-        return FriendRequestService.get_user_friend_requests(self.request.user)
+        """
+        Возвращает queryset заявок на дружбу,
+        связанных с текущим пользователем, как отправителем, так и получателем.
+        """
+        return FriendRequest.objects.select_related(
+            "from_user", "to_user"
+        ).filter(Q(from_user=self.request.user) | Q(to_user=self.request.user))
 
     def perform_create(self, serializer):
-        """Вьюсет добавления в друзья."""
-        friend_id = self.request.data.get("friend")
-        if friend_id is not None:
-            serializer.save(initiator=self.request.user, friend_id=friend_id)
-        else:
-            raise ValueError("ID друга не был передан")
+        """
+        Переопределяет метод создания объекта,
+        автоматически назначая отправителя заявки текущим пользователем.
+        """
+        serializer.save(from_user=self.request.user)
 
-    # def perform_create(self, serializer):
-    #     FriendRequestService.create_friend_request(serializer,
-    #                                                self.request.user)
-
-    @action(detail=True, methods=["post"], url_path="accept")
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="accept",
+        permission_classes=[IsAuthenticated, IsRecipient],
+    )
     def accept_request(self, request, pk=None):
-        """Вьюсет добавления в друзья."""
-        message = FriendRequestService.respond_to_friend_request(
-            pk, request.user, True
+        """
+        Обрабатывает принятие заявки на дружбу текущим пользователем.
+        """
+        FriendRequestService.accept_friend_request(pk, request.user)
+        return Response(
+            {"message": "Заявка на дружбу принята."}, status=status.HTTP_200_OK
         )
-        return Response({"message": message}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="decline")
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="decline",
+        permission_classes=[IsAuthenticated, IsRecipient],
+    )
     def decline_request(self, request, pk=None):
-        """Вьюсет добавления в друзья."""
-        message = FriendRequestService.respond_to_friend_request(
-            pk, request.user, False
+        """
+        Обрабатывает отклонение заявки на дружбу текущим пользователем.
+        """
+        FriendRequestService.decline_friend_request(pk, request.user)
+        return Response(
+            {"message": "Заявка на дружбу отклонена."},
+            status=status.HTTP_200_OK,
         )
-        return Response({"message": message}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={

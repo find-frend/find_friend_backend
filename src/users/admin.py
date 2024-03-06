@@ -1,12 +1,13 @@
 from datetime import date, timedelta
 
-from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-from .models import City, Friend, Interest, User
+from admin_auto_filters.filters import AutocompleteFilter
+
+from .models import City, FriendRequest, Friendship, Interest, User
 
 
 @admin.register(City)
@@ -194,13 +195,36 @@ class MyUserAdmin(UserAdmin):
         return obj.friends_count()
 
 
-@admin.register(Friend)
-class FriendAdmin(admin.ModelAdmin):
-    """Админка друга пользователя."""
+@admin.register(Friendship)
+class FriendshipAdmin(admin.ModelAdmin):
+    """
+    Админка для модели Friendship,
+    предоставляет настройки интерфейса администратора.
+    """
+
+    list_display = ("initiator", "friend", "created_at")
+    search_fields = ("initiator__username", "friend__username")
+    list_filter = ("created_at",)
+    date_hierarchy = "created_at"
+    ordering = ("-created_at",)
+
+
+@admin.register(FriendRequest)
+class FriendRequestAdmin(admin.ModelAdmin):
+    """
+    Админка для модели FriendRequest,
+    предоставляет настройки интерфейса администратора.
+    """
 
     list_display = (
-        "initiator",
-        "friend",
-        "is_added",
+        "from_user",
+        "to_user",
+        "status",
+        "created_at",
+        "updated_at",
         "id",
     )
+    search_fields = ("from_user__username", "to_user__username", "status")
+    list_filter = ("status", "created_at", "updated_at")
+    date_hierarchy = "created_at"
+    ordering = ("-created_at",)
