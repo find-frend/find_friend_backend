@@ -15,16 +15,15 @@ app_name = "api"
 
 router = DefaultRouter()
 
+add_reset_password_urls_to_router(router, base_path="users/reset_password")
 
 router.register("users", MyUserViewSet, basename="users")
 router.register("events", EventViewSet, basename="events")
 router.register("interests", InterestViewSet, basename="interests")
 router.register(r"friends", FriendRequestViewSet, basename="friends")
 
-add_reset_password_urls_to_router(router, base_path="users/reset_password")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

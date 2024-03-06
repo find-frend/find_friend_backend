@@ -9,18 +9,18 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import Friend, Interest, User
+from users.models import Interest, User
 
 from .filters import EventSearchFilter, EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly
+from .serializers import EventSerializer  # MyUserGetSerializer,
 from .serializers import (
-  EventSerializer,
-  FriendSerializer,
-  InterestSerializer,
-  # MyUserGetSerializer,
-  MyUserCreateSerializer,
-  MyUserSerializer)
+    FriendSerializer,
+    InterestSerializer,
+    MyUserCreateSerializer,
+    MyUserSerializer,
+)
 from .services import FriendRequestService
 
 
@@ -81,17 +81,51 @@ class MyUserViewSet(UserViewSet):
         """Получение списка пользователей."""
         return super().list(request, *args, **kwargs)
 
+    # "Выключение" неиспользуемых эндпоинтов джозера
+    @swagger_auto_schema(auto_schema=None)
+    def activation(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def resend_activation(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def reset_password(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def reset_password_confirm(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def set_username(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def reset_username(self, request, *args, **kwargs):  # noqa
+        pass
+
+    @swagger_auto_schema(auto_schema=None)
+    def reset_username_confirm(self, request, *args, **kwargs):  # noqa
+        pass
+
 
 class FriendRequestViewSet(ModelViewSet):
     """Вьюсет добавления в друзья."""
+
     serializer_class = FriendSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get_queryset(self):
+        """Получение queryset'а."""
         return FriendRequestService.get_user_friend_requests(self.request.user)
 
     def perform_create(self, serializer):
-        friend_id = self.request.data.get('friend')
+        """Создание запроса в друзья."""
+        friend_id = self.request.data.get("friend")
         if friend_id is not None:
             serializer.save(initiator=self.request.user, friend_id=friend_id)
         else:
@@ -101,18 +135,20 @@ class FriendRequestViewSet(ModelViewSet):
     #     FriendRequestService.create_friend_request(serializer,
     #                                                self.request.user)
 
-    @action(detail=True, methods=['post'], url_path='accept')
+    @action(detail=True, methods=["post"], url_path="accept")
     def accept_request(self, request, pk=None):
-        message = FriendRequestService.respond_to_friend_request(pk,
-                                                                 request.user,
-                                                                 True)
+        """Принятие запроса в друзья."""
+        message = FriendRequestService.respond_to_friend_request(
+            pk, request.user, True
+        )
         return Response({"message": message}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='decline')
+    @action(detail=True, methods=["post"], url_path="decline")
     def decline_request(self, request, pk=None):
-        message = FriendRequestService.respond_to_friend_request(pk,
-                                                                 request.user,
-                                                                 False)
+        """Отклонение запроса в друзья."""
+        message = FriendRequestService.respond_to_friend_request(
+            pk, request.user, False
+        )
         return Response({"message": message}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
