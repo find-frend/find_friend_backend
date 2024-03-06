@@ -84,6 +84,7 @@ class MyUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             url_path='myfriends', permission_classes=(IsAuthenticated,))
     def my_friends(self, request):
+        """Вывод друзей текущего пользователя."""
         queryset = User.objects.filter(
             sent_requests__is_added=True
         ).exclude(id=self.request.user.id)
