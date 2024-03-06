@@ -64,3 +64,12 @@ class EventSearchFilter(SearchFilter):
         """Выборка по названию мероприятия."""
         name = request.query_params.get("name", "")
         return queryset.filter(name__startswith=name) if name else queryset
+
+
+class CitySearchFilter(SearchFilter):
+    """Класс поиска городов."""
+
+    def filter_queryset(self, request, queryset, view):
+        """Выборка по названию города."""
+        name = request.query_params.get("name", "")
+        return queryset.filter(name__startswith=name) if name else queryset

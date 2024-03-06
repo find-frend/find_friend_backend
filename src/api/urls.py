@@ -3,7 +3,9 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+
 from .views import (
+    CityViewSet,
     EventViewSet,
     FriendRequestViewSet,
     InterestViewSet,
@@ -17,6 +19,7 @@ router = DefaultRouter()
 router.register("users", MyUserViewSet, basename="users")
 router.register("events", EventViewSet, basename="events")
 router.register("interests", InterestViewSet, basename="interests")
+router.register("cities", CityViewSet, basename="cities")
 router.register(r"friends", FriendRequestViewSet, basename="friends")
 
 urlpatterns = [
