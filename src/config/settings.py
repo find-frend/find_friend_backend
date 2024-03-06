@@ -31,6 +31,7 @@ THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
     "djoser",
+    "django_rest_passwordreset",
     "drf_yasg",
     "django_filters",
     "admin_auto_filters",
