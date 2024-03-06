@@ -46,7 +46,10 @@ class Event(models.Model):
         verbose_name="Место проведения мероприятия",
     )
     image = models.ImageField(
-        upload_to="images/events/", verbose_name="Фото мероприятия", blank=True
+        upload_to="images/events/",
+        verbose_name="Фото мероприятия",
+        blank=True,
+        null=True,
     )
 
     class Meta:

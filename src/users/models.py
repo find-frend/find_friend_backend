@@ -141,6 +141,7 @@ class User(AbstractUser):
     avatar = models.ImageField(
         "Аватарка",
         blank=True,
+        null=True,
         upload_to="images/user/",
     )
     profession = models.CharField(
@@ -291,10 +292,16 @@ class Friend(models.Model):
     """Модель друзей."""
 
     initiator = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="sent_requests"
+        User,
+        on_delete=models.CASCADE,
+        validators=[validate_initiator],
+        related_name="sent_requests",
     )
     friend = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="received_requests"
+        User,
+        on_delete=models.CASCADE,
+        validators=[validate_friend],
+        related_name="received_requests",
     )
     is_added = models.BooleanField(default=False)
 
@@ -310,6 +317,17 @@ class Friend(models.Model):
         ]
         verbose_name = "Друг"
         verbose_name_plural = "Друзья"
+
+    def clean(self, *args, **kwargs):
+        """Валидация дружбы."""
+        if self.initiator == self.friend:
+            raise ValidationError("Дружба с самим собой невозможна")
+        super().clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        """Вызов метода валидации дружбы."""
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 @receiver(reset_password_token_created)
