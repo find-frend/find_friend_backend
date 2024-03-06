@@ -1,18 +1,13 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers  # , status
-
 # from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
 from events.models import Event, EventMember
-from users.models import City, Friend, Interest, User, UserInterest
-from users.validators import (
-    EMAIL_LENGTH_MSG,
-    FIRST_NAME_LENGTH_MSG,
-    INVALID_EMAIL_MSG,
-    LAST_NAME_LENGTH_MSG,
-)
+from users.models import City, FriendRequest, Interest, User  # UserInterest
+from users.validators import (EMAIL_LENGTH_MSG, FIRST_NAME_LENGTH_MSG,
+                              INVALID_EMAIL_MSG, LAST_NAME_LENGTH_MSG)
 
 
 class InterestSerializer(ModelSerializer):
@@ -106,73 +101,73 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         )
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
-    def create(self, validated_data):
-        """Создание пользователя с указанными интересами и друзьями."""
-        is_interests = False
-        is_friends = False
-        if "interests" in self.initial_data:
-            interests = validated_data.pop("interests")
-            is_interests = True
-        if "friends" in self.initial_data:
-            friends = self.initial_data.pop("friends")
-            is_friends = True
-        user = User.objects.create(**validated_data)
-        if is_interests:
-            for interest in interests:
-                current_interest = Interest.objects.get(**interest)
-                UserInterest.objects.create(
-                    user=user, interest=current_interest
-                )
-        if is_friends:
-            is_addeds = []
-            for friend in friends:
-                friends_list = Friend.objects.filter(
-                    initiator=user, friend=friend["id"]
-                )
-                if friends_list:
-                    is_addeds.append(friends_list[0].is_added)
-                else:
-                    is_addeds.append(False)
-            for i, friend in enumerate(friends):
-                current_friend = User.objects.get(**friend)
-                Friend.objects.create(
-                    initiator=user,
-                    friend=current_friend,
-                    is_added=is_addeds[i],
-                )
-        return user
-
-    def update(self, instance, validated_data):
-        """Обновление пользователя с указанными интересами и друзьями."""
-        if "interests" in self.initial_data:
-            interests = validated_data.pop("interests")
-            instance.interests.clear()
-            for interest in interests:
-                current_interest = Interest.objects.get(**interest)
-                UserInterest.objects.create(
-                    user=instance, interest=current_interest
-                )
-        if "friends" in self.initial_data:
-            # friends = validated_data.pop("friends")
-            friends = self.initial_data.pop("friends")
-            is_addeds = []
-            for friend in friends:
-                friends_list = Friend.objects.filter(
-                    initiator=instance, friend=friend["id"]
-                )
-                if friends_list:
-                    is_addeds.append(friends_list[0].is_added)
-                else:
-                    is_addeds.append(False)
-            instance.friends.clear()
-            for i, friend in enumerate(friends):
-                current_friend = User.objects.get(**friend)
-                Friend.objects.create(
-                    initiator=instance,
-                    friend=current_friend,
-                    is_added=is_addeds[i],
-                )
-        return super().update(instance, validated_data)
+    # def create(self, validated_data):
+    #     """Создание пользователя с указанными интересами и друзьями."""
+    #     is_interests = False
+    #     is_friends = False
+    #     if "interests" in self.initial_data:
+    #         interests = validated_data.pop("interests")
+    #         is_interests = True
+    #     if "friends" in self.initial_data:
+    #         friends = self.initial_data.pop("friends")
+    #         is_friends = True
+    #     user = User.objects.create(**validated_data)
+    #     if is_interests:
+    #         for interest in interests:
+    #             current_interest = Interest.objects.get(**interest)
+    #             UserInterest.objects.create(
+    #                 user=user, interest=current_interest
+    #             )
+    #     if is_friends:
+    #         is_addeds = []
+    #         for friend in friends:
+    #             friends_list = Friend.objects.filter(
+    #                 initiator=user, friend=friend["id"]
+    #             )
+    #             if friends_list:
+    #                 is_addeds.append(friends_list[0].is_added)
+    #             else:
+    #                 is_addeds.append(False)
+    #         for i, friend in enumerate(friends):
+    #             current_friend = User.objects.get(**friend)
+    #             Friend.objects.create(
+    #                 initiator=user,
+    #                 friend=current_friend,
+    #                 is_added=is_addeds[i],
+    #             )
+    #     return user
+    #
+    # def update(self, instance, validated_data):
+    #     """Обновление пользователя с указанными интересами и друзьями."""
+    #     if "interests" in self.initial_data:
+    #         interests = validated_data.pop("interests")
+    #         instance.interests.clear()
+    #         for interest in interests:
+    #             current_interest = Interest.objects.get(**interest)
+    #             UserInterest.objects.create(
+    #                 user=instance, interest=current_interest
+    #             )
+    #     if "friends" in self.initial_data:
+    #         # friends = validated_data.pop("friends")
+    #         friends = self.initial_data.pop("friends")
+    #         is_addeds = []
+    #         for friend in friends:
+    #             friends_list = Friend.objects.filter(
+    #                 initiator=instance, friend=friend["id"]
+    #             )
+    #             if friends_list:
+    #                 is_addeds.append(friends_list[0].is_added)
+    #             else:
+    #                 is_addeds.append(False)
+    #         instance.friends.clear()
+    #         for i, friend in enumerate(friends):
+    #             current_friend = User.objects.get(**friend)
+    #             Friend.objects.create(
+    #                 initiator=instance,
+    #                 friend=current_friend,
+    #                 is_added=is_addeds[i],
+    #             )
+    #     return super().update(instance, validated_data)
 
 
 class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
@@ -209,21 +204,20 @@ class MyUserGetSerializer(UserSerializer):
             "city",
         )
 
-
-class FriendSerializer(ModelSerializer):
-    """Сериализатор друга пользователя."""
-
-    initiator = MyUserSerializer(read_only=True)
-    friend = MyUserSerializer(read_only=True)
-
-    class Meta:
-        model = Friend
-        fields = (
-            "id",
-            "initiator",
-            "friend",
-            "is_added",
-        )
+    # class FriendSerializer(ModelSerializer):
+    #     """Сериализатор друга пользователя."""
+    #
+    #     initiator = MyUserSerializer(read_only=True)
+    #     friend = MyUserSerializer(read_only=True)
+    #
+    #     class Meta:
+    #         model = Friend
+    #         fields = (
+    #             "id",
+    #             "initiator",
+    #             "friend",
+    #             "is_added",
+    #         )
 
     '''
     def validate(self, data):
@@ -262,6 +256,34 @@ class FriendSerializer(ModelSerializer):
             )
         return data
         '''
+
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели FriendRequest,
+    обрабатывающий входные и выходные данные API заявок на дружбу.
+    """
+
+    class Meta:
+        model = FriendRequest
+        fields = "__all__"
+        read_only_fields = ("from_user", "status")
+
+    def validate(self, data):
+        """
+        Проверяет валидность данных перед созданием объекта заявки на дружбу.
+        """
+        if data["to_user"] == self.context["request"].user:
+            raise serializers.ValidationError(
+                "Вы не можете отправить заявку на дружбу самому себе."
+            )
+        if FriendRequest.objects.filter(
+            from_user=self.context["request"].user, to_user=data["to_user"]
+        ).exists():
+            raise serializers.ValidationError(
+                "Заявка на дружбу этому пользователю уже отправлена."
+            )
+        return data
 
 
 class GetMembersField(serializers.RelatedField):
