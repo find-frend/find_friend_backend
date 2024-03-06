@@ -416,3 +416,5 @@ class Friendship(models.Model):
                 fields=["initiator", "friend"], name="unique_friendship"
             )
         ]
+        verbose_name = "Друг"
+        verbose_name_plural = "Друзья"
