@@ -98,6 +98,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
     def get_network_nick(self, obj):
+        """Метод сериализатора для ограничения просмотра поля network_nick."""
         request = self.context.get("request")
 
         if (
@@ -202,7 +203,9 @@ class FriendSerializer(ModelSerializer):
             "is_added",
         )
 
-    # def validate(self, data): каждый запрос ловился на первой ошибке, хотя данные есть, поэтому пока закоменчу.
+    # # каждый запрос ловился на первой ошибке,
+    # # хотя данные есть, поэтому пока закоменчу.
+    # def validate(self, data):
     #     """Валидация друзей."""
     #     if not data:
     #         raise ValidationError(
@@ -212,7 +215,9 @@ class FriendSerializer(ModelSerializer):
     #     initiator = self.instance
     #     friend = self.context.get("request").friend
     #     if (
-    #         Friend.objects.filter(initiator=initiator, friend=friend).exists()
+    #         Friend.objects.filter(
+    #             initiator=initiator, friend=friend
+    #         ).exists()
     #         or Friend.objects.filter(
     #             initiator=friend, friend=initiator
     #         ).exists()
