@@ -1,3 +1,4 @@
+from django.db.models import Q
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers  # , status
 
@@ -83,6 +84,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     friends = GetFriendsField(read_only=True, many=True, required=False)
     age = serializers.IntegerField(required=False)
     friends_count = serializers.IntegerField(required=False)
+    network_nick = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -105,6 +107,20 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             "additionally",
         )
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
+
+    def get_network_nick(self, obj):
+        """Метод сериализатора для ограничения просмотра поля network_nick."""
+        request = self.context.get("request")
+
+        if (
+            Friend.objects.filter(
+                Q(is_added=True),
+                Q(initiator=request.user, friend=obj)
+                | Q(initiator=obj, friend=request.user),
+            ).exists()
+        ) or obj == request.user:
+            return obj.network_nick
+        return None
 
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
