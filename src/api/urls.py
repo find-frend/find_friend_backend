@@ -22,7 +22,7 @@ router.register(r"friends", FriendRequestViewSet, basename="friends")
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "auth/password_reset/",
+        "auth/users/reset_password/",
         include("django_rest_passwordreset.urls", namespace="password_reset"),
     ),
     path("auth/", include("djoser.urls")),
