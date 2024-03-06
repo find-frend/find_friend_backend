@@ -287,6 +287,7 @@ class GetMembersField(serializers.RelatedField):
         """Представление списка участников мероприятия."""
         return {"id": value.pk}
 
+
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
 
