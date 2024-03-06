@@ -106,7 +106,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     def create(self, validated_data):
         """Создание пользователя с указанными интересами и друзьями."""
         is_interests = False
-        is_friends = False
+        # is_friends = False
         if "interests" in self.initial_data:
             interests = validated_data.pop("interests")
             is_interests = True
