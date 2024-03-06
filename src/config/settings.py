@@ -162,6 +162,17 @@ DJOSER = {
     "HIDE_USERS": False,
 }
 
+DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
+    "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
+    "OPTIONS": {
+        "min_number": 100000,
+        "max_number": 999999,
+    },
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = BASE_DIR / "tmp/emails"
+
 LANGUAGE_CODE = "ru"
 
 TIME_ZONE = "Europe/Moscow"
