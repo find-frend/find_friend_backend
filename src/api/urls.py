@@ -1,10 +1,14 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-
 from rest_framework.routers import DefaultRouter
 
-from .views import EventViewSet, FriendRequestViewSet, InterestViewSet, MyUserViewSet
+from .views import (
+    EventViewSet,
+    FriendRequestViewSet,
+    InterestViewSet,
+    MyUserViewSet,
+)
 
 app_name = "api"
 
@@ -17,6 +21,10 @@ router.register(r"friends", FriendRequestViewSet, basename="friends")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path(
+        "auth/password_reset/",
+        include("django_rest_passwordreset.urls", namespace="password_reset"),
+    ),
     path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
