@@ -93,6 +93,18 @@ class MyUserViewSet(UserViewSet):
         """Получение списка пользователей."""
         return super().list(request, *args, **kwargs)
 
+    @action(detail=False, methods=['get'],
+            url_path='myfriends', permission_classes=(IsAuthenticated,))
+    def my_friends(self, request):
+        """Вывод друзей текущего пользователя."""
+        queryset = User.objects.filter(
+            sent_requests__is_added=True
+        ).exclude(id=self.request.user.id)
+        serializer = MyUserSerializer(queryset,
+                                      many=True,
+                                      context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class FriendRequestViewSet(ModelViewSet):
     """Вьюсет добавления в друзья."""
