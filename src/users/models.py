@@ -1,8 +1,10 @@
+import os
 from datetime import date
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
@@ -10,6 +12,7 @@ from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from django_rest_passwordreset.signals import reset_password_token_created
+from PIL import Image
 
 from config.settings import (
     MAX_LENGTH_CHAR,
@@ -18,8 +21,22 @@ from config.settings import (
     MAX_LENGTH_EVENT,
 )
 
-from .utils import make_thumbnail
+# from .utils import make_thumbnail
 from .validators import INVALID_SYMBOLS_MSG, validate_birthday
+
+
+class FriendRequestManager(models.Manager):
+    """
+    Менеджер для модели FriendRequest,
+    предоставляющий методы для работы с заявками на дружбу.
+    """
+
+    def pending_requests(self, user):
+        """
+        Возвращает queryset заявок на дружбу,
+        ожидающих ответа от указанного пользователя.
+        """
+        return self.get_queryset().filter(to_user=user, status="Pending")
 
 
 class City(models.Model):
@@ -125,7 +142,7 @@ class User(AbstractUser):
     )
     friends = models.ManyToManyField(
         "self",
-        through="Friend",
+        through="Friendship",
         blank=True,
         verbose_name="Друзья",
         help_text="Друзья пользователя",
@@ -199,11 +216,45 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+    @staticmethod
+    def resize_image(image, size=(100, 100)):
+        """Изменение размера изображения с сохранением пропорций."""
+        with Image.open(image) as img:
+            img.thumbnail(size, Image.LANCZOS)
+            return img
+
+    def save_resized_image(self, image, filename):
+        """Сохранение измененного изображения."""
+        with ContentFile(b"") as content_file:
+            image.save(content_file, format=image.format)
+            self.avatar.save(filename, content_file, save=False)
+
     def save(self, *args, **kwargs):
-        """Сохранение аватара заданного размера."""
+        """Сохранение аватара заданного размера с проверкой его размера."""
         if self.avatar:
-            self.avatar = make_thumbnail(self.avatar, size=(100, 100))
+            try:
+                filename, ext = os.path.splitext(self.avatar.name)
+                resized_image = self.resize_image(self.avatar)
+                max_file_size_mb = self.max_file_size / (1024 * 1024)
+                if resized_image.tell() > self.max_file_size:
+                    raise ValidationError(
+                        "Размер файла превышает допустимый лимит. "
+                        f"Максимальный размер файла: {max_file_size_mb} MB."
+                    )
+                self.save_resized_image(resized_image, filename)
+            except OSError as e:
+                raise ValidationError(f"Ошибка при сохранении аватара: {e}")
+            except ValidationError as e:
+                raise ValidationError(
+                    f"Ошибка при изменении размера изображения: {e}"
+                )
+
         super().save(*args, **kwargs)
+
+    @property
+    def max_file_size(self):
+        """Максимальный размер файла (в байтах)."""
+        return 8 * 1024 * 1024
 
     def age(self):
         """Вычисление возраста пользователя."""
@@ -288,46 +339,91 @@ def validate_initiator(value):
     return value
 
 
-class Friend(models.Model):
-    """Модель друзей."""
+class FriendRequest(models.Model):
+    """Модель заявки на дружбу между пользователями.."""
 
-    initiator = models.ForeignKey(
+    STATUS_CHOICES = (
+        ("Pending", "В ожидании"),
+        ("Accepted", "Принято"),
+        ("Declined", "Отклонено"),
+    )
+    from_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        validators=[validate_initiator],
-        related_name="sent_requests",
+        related_name="sent_friend_requests",
+        verbose_name="Инициатор",
     )
-    friend = models.ForeignKey(
+    to_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        validators=[validate_friend],
-        related_name="received_requests",
+        related_name="received_friend_requests",
+        verbose_name="Получатель",
     )
-    is_added = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=MAX_LENGTH_CHAR,
+        choices=STATUS_CHOICES,
+        default="Pending",
+        verbose_name="Статус",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Создано"
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=[
-                    "initiator",
-                    "friend",
+                    "from_user",
+                    "to_user",
                 ],
                 name="unique_friend",
             )
         ]
+
+        ordering = ["-created_at"]
+        verbose_name = "Заявка в друзья"
+        verbose_name_plural = "Заявки в друзья"
+
+    # def clean(self, *args, **kwargs):
+    #     """Валидация дружбы."""
+    #     if self.initiator == self.friend:
+    #         raise ValidationError("Дружба с самим собой невозможна")
+    #     super().clean(*args, **kwargs)
+    #
+    # def save(self, *args, **kwargs):
+    #     """Вызов метода валидации дружбы."""
+    #     self.full_clean()
+    #     return super().save(*args, **kwargs)
+
+
+class Friendship(models.Model):
+    """
+    Модель представления дружеской связи между двумя пользователями.
+    """
+
+    initiator = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="initiator",
+        verbose_name=_("Инициатор"),
+    )
+    friend = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="friend",
+        verbose_name=_("Друг"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["initiator", "friend"], name="unique_friendship"
+            )
+        ]
         verbose_name = "Друг"
         verbose_name_plural = "Друзья"
-
-    def clean(self, *args, **kwargs):
-        """Валидация дружбы."""
-        if self.initiator == self.friend:
-            raise ValidationError("Дружба с самим собой невозможна")
-        super().clean(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        """Вызов метода валидации дружбы."""
-        self.full_clean()
-        return super().save(*args, **kwargs)
 
 
 @receiver(reset_password_token_created)
