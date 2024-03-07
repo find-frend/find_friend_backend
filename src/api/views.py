@@ -93,35 +93,6 @@ class MyUserViewSet(UserViewSet):
         """Получение списка пользователей."""
         return super().list(request, *args, **kwargs)
 
-    # "Выключение" неиспользуемых эндпоинтов джозера
-    @swagger_auto_schema(auto_schema=None)
-    def activation(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def resend_activation(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def reset_password(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def reset_password_confirm(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def set_username(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def reset_username(self, request, *args, **kwargs):  # noqa
-        pass
-
-    @swagger_auto_schema(auto_schema=None)
-    def reset_username_confirm(self, request, *args, **kwargs):  # noqa
-        pass
-
     @action(
         detail=False,
         methods=["get"],

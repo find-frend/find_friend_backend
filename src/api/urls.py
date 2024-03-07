@@ -2,8 +2,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from django_rest_passwordreset.urls import add_reset_password_urls_to_router
-from rest_framework.routers import DefaultRouter
 
+from .routers import CustomRouter
 from .views import (
     CityViewSet,
     EventViewSet,
@@ -14,7 +14,7 @@ from .views import (
 
 app_name = "api"
 
-router = DefaultRouter()
+router = CustomRouter()
 
 add_reset_password_urls_to_router(router, base_path="users/reset_password")
 
