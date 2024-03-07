@@ -1,5 +1,4 @@
 from django.db.models import Q
-
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from drf_yasg import openapi
@@ -13,14 +12,17 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from events.models import Event
 from users.models import City, FriendRequest, Interest, User
 
-from .filters import (CitySearchFilter, EventSearchFilter, EventsFilter,
-                      UserFilter)
+from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import IsAdminOrAuthorOrReadOnly, IsRecipient
 from .serializers import CitySerializer  # MyUserGetSerializer,
-from .serializers import (EventSerializer, FriendRequestSerializer,
-                          InterestSerializer, MyUserCreateSerializer,
-                          MyUserSerializer)
+from .serializers import (
+    EventSerializer,
+    FriendRequestSerializer,
+    InterestSerializer,
+    MyUserCreateSerializer,
+    MyUserSerializer,
+)
 from .services import FriendRequestService
 
 
@@ -87,31 +89,35 @@ class MyUserViewSet(UserViewSet):
         """Получение списка пользователей."""
         return super().list(request, *args, **kwargs)
 
-    @action(detail=False, methods=['get'],
-            url_path='myfriends', permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="myfriends",
+        permission_classes=(IsAuthenticated,),
+    )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        queryset = User.objects.filter(
-            sent_requests__is_added=True
-        ).exclude(id=self.request.user.id)
-        serializer = MyUserSerializer(queryset,
-                                      many=True,
-                                      context={'request': request})
+        queryset = User.objects.filter(sent_requests__is_added=True).exclude(
+            id=self.request.user.id
+        )
+        serializer = MyUserSerializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FriendRequestViewSet(ModelViewSet):
-    """
-    ViewSet для управления заявками на дружбу,
-    поддерживает создание, просмотр, принятие и отклонение заявок.
+    """ViewSet для управления заявками на дружбу.
+
+    Поддерживает создание, просмотр, принятие и отклонение заявок.
     """
 
     serializer_class = FriendRequestSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Возвращает queryset заявок на дружбу,
+        """Возвращает queryset заявок на дружбу.
+
         связанных с текущим пользователем, как отправителем, так и получателем.
         """
         return FriendRequest.objects.select_related(
@@ -119,8 +125,8 @@ class FriendRequestViewSet(ModelViewSet):
         ).filter(Q(from_user=self.request.user) | Q(to_user=self.request.user))
 
     def perform_create(self, serializer):
-        """
-        Переопределяет метод создания объекта,
+        """Переопределяет метод создания объекта.
+
         автоматически назначая отправителя заявки текущим пользователем.
         """
         serializer.save(from_user=self.request.user)
@@ -132,9 +138,7 @@ class FriendRequestViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated, IsRecipient],
     )
     def accept_request(self, request, pk=None):
-        """
-        Обрабатывает принятие заявки на дружбу текущим пользователем.
-        """
+        """Обрабатывает принятие заявки на дружбу текущим пользователем."""
         FriendRequestService.accept_friend_request(pk, request.user)
         return Response(
             {"message": "Заявка на дружбу принята."}, status=status.HTTP_200_OK
@@ -147,9 +151,7 @@ class FriendRequestViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated, IsRecipient],
     )
     def decline_request(self, request, pk=None):
-        """
-        Обрабатывает отклонение заявки на дружбу текущим пользователем.
-        """
+        """Обрабатывает отклонение заявки на дружбу текущим пользователем."""
         FriendRequestService.decline_friend_request(pk, request.user)
         return Response(
             {"message": "Заявка на дружбу отклонена."},
@@ -195,12 +197,17 @@ class EventViewSet(ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     filter_backends = (
-        EventSearchFilter,
+        # EventSearchFilter,
         filters.SearchFilter,
         DjangoFilterBackend,
     )
     filterset_class = EventsFilter
-    search_fields = ("name", "event_type", "date", "city__name")
+    search_fields = [
+        "name",
+        "event_type",
+        "date",
+        "city__name",
+    ]
     pagination_class = EventPagination
     permission_classes = [
         IsAdminOrAuthorOrReadOnly,
@@ -255,9 +262,10 @@ class CityViewSet(ReadOnlyModelViewSet):
     queryset = City.objects.all()
     serializer_class = CitySerializer
     filter_backends = (
-        CitySearchFilter,
         filters.SearchFilter,
         DjangoFilterBackend,
     )
-    search_fields = ("name",)
+    search_fields = [
+        "name",
+    ]
     pagination_class = None

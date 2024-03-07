@@ -2,10 +2,11 @@ from datetime import date
 
 from django.utils import timezone
 from django_filters import rest_framework as filters
-from rest_framework.filters import SearchFilter
 
 from events.models import Event
 from users.models import User
+
+# from rest_framework.filters import SearchFilter
 
 
 class UserFilter(filters.FilterSet):
@@ -57,6 +58,7 @@ class EventsFilter(filters.FilterSet):
         fields = ["event_type", "date", "city", "city__name"]
 
 
+'''
 class EventSearchFilter(SearchFilter):
     """Класс поиска по названию мероприятия."""
 
@@ -64,12 +66,4 @@ class EventSearchFilter(SearchFilter):
         """Выборка по названию мероприятия."""
         name = request.query_params.get("name", "")
         return queryset.filter(name__startswith=name) if name else queryset
-
-
-class CitySearchFilter(SearchFilter):
-    """Класс поиска городов."""
-
-    def filter_queryset(self, request, queryset, view):
-        """Выборка по названию города."""
-        name = request.query_params.get("name", "")
-        return queryset.filter(name__startswith=name) if name else queryset
+'''
