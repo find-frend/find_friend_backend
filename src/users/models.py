@@ -26,14 +26,14 @@ from .validators import INVALID_SYMBOLS_MSG, validate_birthday
 
 
 class FriendRequestManager(models.Manager):
-    """
-    Менеджер для модели FriendRequest,
+    """Менеджер для модели FriendRequest.
+
     предоставляющий методы для работы с заявками на дружбу.
     """
 
     def pending_requests(self, user):
-        """
-        Возвращает queryset заявок на дружбу,
+        """Возвращает queryset заявок на дружбу.
+
         ожидающих ответа от указанного пользователя.
         """
         return self.get_queryset().filter(to_user=user, status="Pending")
@@ -385,22 +385,9 @@ class FriendRequest(models.Model):
         verbose_name = "Заявка в друзья"
         verbose_name_plural = "Заявки в друзья"
 
-    # def clean(self, *args, **kwargs):
-    #     """Валидация дружбы."""
-    #     if self.initiator == self.friend:
-    #         raise ValidationError("Дружба с самим собой невозможна")
-    #     super().clean(*args, **kwargs)
-    #
-    # def save(self, *args, **kwargs):
-    #     """Вызов метода валидации дружбы."""
-    #     self.full_clean()
-    #     return super().save(*args, **kwargs)
-
 
 class Friendship(models.Model):
-    """
-    Модель представления дружеской связи между двумя пользователями.
-    """
+    """Модель представления дружеской связи между двумя пользователями."""
 
     initiator = models.ForeignKey(
         User,
