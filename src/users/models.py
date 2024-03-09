@@ -5,10 +5,13 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.mail import send_mail
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
+from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
 from config.settings import (
@@ -408,3 +411,34 @@ class Friendship(models.Model):
         ]
         verbose_name = "Друг"
         verbose_name_plural = "Друзья"
+
+
+@receiver(reset_password_token_created)
+def password_reset_token_created(
+    sender, instance, reset_password_token, *args, **kwargs
+):
+    """
+    Обработка токенов сброса пароля.
+
+    При создании токена пользователю отправляется email с кодом.
+    :sender: View класс, отправивший сигнал
+    :instance: Экземпляр View класса, отправивший сигнал
+    :reset_password_token: Объект модели токена
+    :args: Позиционные аргументы
+    :kwargs: Именованные аргументы
+    :return: None
+    """
+    email_plaintext_message = "Ваш код для восстановления пароля: {}".format(
+        reset_password_token.key
+    )
+
+    send_mail(
+        # Тема:
+        "Восстановление пароля",
+        # Сообщение:
+        email_plaintext_message,
+        # Отправитель:
+        "noreply@somehost.local",
+        # Почта получателя:
+        [reset_password_token.user.email],
+    )
