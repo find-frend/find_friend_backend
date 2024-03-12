@@ -6,6 +6,7 @@ from rest_framework import serializers  # , status
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
+from config.constants import messages
 from events.models import Event, EventMember
 from users.models import (
     City,
@@ -52,21 +53,21 @@ class MyUserBaseSerializer(serializers.Serializer):
         extra_kwargs = {
             "email": {
                 "error_messages": {
-                    "max_length": EMAIL_LENGTH_MSG,
-                    "min_length": EMAIL_LENGTH_MSG,
-                    "invalid": INVALID_EMAIL_MSG,
+                    "max_length": messages.EMAIL_LENGTH_MSG,
+                    "min_length": messages.EMAIL_LENGTH_MSG,
+                    "invalid": messages.INVALID_EMAIL_MSG,
                 }
             },
             "first_name": {
                 "error_messages": {
-                    "max_length": FIRST_NAME_LENGTH_MSG,
-                    "min_length": FIRST_NAME_LENGTH_MSG,
+                    "max_length": messages.FIRST_NAME_LENGTH_MSG,
+                    "min_length": messages.FIRST_NAME_LENGTH_MSG,
                 }
             },
             "last_name": {
                 "error_messages": {
-                    "max_length": LAST_NAME_LENGTH_MSG,
-                    "min_length": LAST_NAME_LENGTH_MSG,
+                    "max_length": messages.LAST_NAME_LENGTH_MSG,
+                    "min_length": messages.LAST_NAME_LENGTH_MSG,
                 }
             },
         }

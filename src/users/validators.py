@@ -4,21 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from config import settings
-
-INVALID_SYMBOLS_MSG = "Введены недопустимые символы."
-INVALID_EMAIL_MSG = "Некорректный адрес электронной почты."
-FIRST_NAME_LENGTH_MSG = (
-    f"Имя должно содержать от {settings.MIN_LENGTH_CHAR} до "
-    f"{settings.MAX_LENGTH_CHAR} символов."
-)
-LAST_NAME_LENGTH_MSG = (
-    f"Фамилия должна содержать от {settings.MIN_LENGTH_CHAR} до "
-    f"{settings.MAX_LENGTH_CHAR} символов."
-)
-EMAIL_LENGTH_MSG = (
-    f"Почта должна содержать от {settings.MIN_LENGTH_EMAIL} до "
-    f"{settings.MAX_LENGTH_EMAIL} символов."
-)
+from config.constants import messages
 
 
 class PasswordLengthValidator:
