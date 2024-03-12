@@ -1,8 +1,14 @@
+from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email as django_validate_email
 from django.db.models import Q
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import (
+    TokenCreateSerializer,
+    UserCreateSerializer,
+    UserSerializer,
+)
 from rest_framework import serializers  # , status
-
-# from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
@@ -16,12 +22,41 @@ from users.models import (
     User,
     UserInterest,
 )
-from users.validators import (
-    EMAIL_LENGTH_MSG,
-    FIRST_NAME_LENGTH_MSG,
-    INVALID_EMAIL_MSG,
-    LAST_NAME_LENGTH_MSG,
-)
+from users.validators import validate_email, validate_password
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):
+    """Кастомный сериализатор создания токена при аутентификации."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        """Валидация данных при аутентификации."""
+        email = attrs.get("email", "")
+        password = attrs.get("password", "")
+
+        validate_email(email)
+        try:
+            django_validate_email(email)
+        except DjangoValidationError:
+            raise ValidationError(messages.INVALID_EMAIL_MSG)
+        validate_password(password)
+
+        params = {"email": email}
+        self.user = authenticate(
+            request=self.context.get("request"), **params, password=password
+        )
+        if not self.user:
+            self.user = User.objects.filter(**params).first()
+            if self.user and not self.user.check_password(password):
+                self.fail("invalid_credentials")
+
+        if self.user and self.user.is_active:
+            return attrs
+
+        self.fail("invalid_credentials")
+        return None
 
 
 class InterestSerializer(ModelSerializer):

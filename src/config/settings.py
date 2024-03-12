@@ -153,6 +153,7 @@ DJOSER = {
         "user": "api.serializers.MyUserSerializer",
         "user_create": "api.serializers.MyUserCreateSerializer",
         "current_user": "api.serializers.MyUserSerializer",
+        "token_create": "api.serializers.CustomTokenCreateSerializer",
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
