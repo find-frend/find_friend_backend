@@ -1,5 +1,6 @@
 import os
 from datetime import date
+from io import BytesIO
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -11,15 +12,20 @@ from django.db import models
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+
 from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
 from config.settings import (
+    MAX_FILE_SIZE,
+    MAX_FILE_SIZE_MB,
     MAX_LENGTH_CHAR,
     MAX_LENGTH_DESCRIBE,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_EVENT,
 )
+
+from .exceptions import ImageResizeError, ImageSizeError
 
 # from .utils import make_thumbnail
 from .validators import INVALID_SYMBOLS_MSG, validate_birthday
@@ -217,37 +223,53 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name}"
 
     @staticmethod
-    def resize_image(image, size=(100, 100)):
+    def resize_image(image_bytes):
         """Изменение размера изображения с сохранением пропорций."""
-        with Image.open(image) as img:
-            img.thumbnail(size, Image.LANCZOS)
-            return img
+        try:
+            with Image.open(BytesIO(image_bytes)) as img:
+                img.thumbnail((100, 100), Image.LANCZOS)
+                output = BytesIO()
+                img.save(output, format=img.format)
+                return output.getvalue()
+        except Exception as e:
+            raise ImageResizeError(
+                f"Не удалось изменить размер изображения: {str(e)}"
+            )
+
+    @staticmethod
+    def check_image_size(image_bytes):
+        """Проверка размера изображения."""
+        image_size_mb = len(image_bytes) / (1024 * 1024)
+        if len(image_bytes) > MAX_FILE_SIZE:
+            raise ImageSizeError(
+                f"Размер файла {image_size_mb:.2f} "
+                f"байт превышает допустимый лимит: {MAX_FILE_SIZE_MB} MB."
+            )
 
     def save_resized_image(self, image, filename):
         """Сохранение измененного изображения."""
-        with ContentFile(b"") as content_file:
-            image.save(content_file, format=image.format)
-            self.avatar.save(filename, content_file, save=False)
+        content_file = ContentFile(image)
+        self.avatar.save(filename, content_file, save=False)
 
     def save(self, *args, **kwargs):
         """Сохранение аватара заданного размера с проверкой его размера."""
         if self.avatar:
+            filename, ext = os.path.splitext(self.avatar.name)
             try:
-                filename, ext = os.path.splitext(self.avatar.name)
-                resized_image = self.resize_image(self.avatar)
-                max_file_size_mb = self.max_file_size / (1024 * 1024)
-                if resized_image.tell() > self.max_file_size:
-                    raise ValidationError(
-                        "Размер файла превышает допустимый лимит. "
-                        f"Максимальный размер файла: {max_file_size_mb} MB."
-                    )
-                self.save_resized_image(resized_image, filename)
-            except OSError as e:
-                raise ValidationError(f"Ошибка при сохранении аватара: {e}")
-            except ValidationError as e:
-                raise ValidationError(
-                    f"Ошибка при изменении размера изображения: {e}"
-                )
+                with self.avatar.open("rb") as f:
+                    image_bytes = f.read()
+
+                resized_image = self.resize_image(image_bytes)
+                self.check_image_size(resized_image)
+                new_filename = f"{filename}_resized{ext}"
+                self.save_resized_image(resized_image, new_filename)
+
+            except ImageSizeError as e:
+                raise ValidationError(f"Ошибка размера файла: {e}")
+            except ImageResizeError as e:
+                raise ValidationError(f"Ошибка при изменении размера: {e}")
+            except Exception as e:
+                raise ValidationError(f"Неизвестная ошибка: {e}")
 
         super().save(*args, **kwargs)
 
