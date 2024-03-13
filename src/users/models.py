@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
+from config.constants import messages
 from config.settings import (
     MAX_LENGTH_CHAR,
     MAX_LENGTH_DESCRIBE,
@@ -22,7 +23,7 @@ from config.settings import (
 )
 
 # from .utils import make_thumbnail
-from .validators import INVALID_SYMBOLS_MSG, validate_birthday
+from .validators import validate_birthday
 
 
 class FriendRequestManager(models.Manager):
@@ -107,7 +108,7 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message=INVALID_SYMBOLS_MSG,
+                message=messages.INVALID_SYMBOLS_MSG,
                 code="invalid_user_first_name",
             ),
             MinLengthValidator(limit_value=2),
@@ -121,7 +122,7 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r"^[а-яА-ЯёЁa-zA-Z]+(\s?\-?[а-яА-ЯёЁa-zA-Z]+){0,5}$",
-                message=INVALID_SYMBOLS_MSG,
+                message=messages.INVALID_SYMBOLS_MSG,
                 code="invalid_user_last_name",
             ),
             MinLengthValidator(limit_value=2),
