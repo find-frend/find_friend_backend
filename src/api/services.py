@@ -5,9 +5,9 @@ from users.models import FriendRequest, Friendship
 
 
 def handle_not_found(func):
-    """
-    Декоратор для обработки исключений ObjectDoesNotExist,
-    преобразуя их в Http404.
+    """Декоратор для обработки исключений ObjectDoesNotExist.
+
+    Преобразует в Http404.
     """
     from functools import wraps
 
@@ -24,18 +24,15 @@ def handle_not_found(func):
 
 
 class FriendRequestService:
-    """
-    Сервис для обработки бизнес-логики, связанной с заявками на дружбу.
-    """
+    """Сервис для обработки бизнес-логики, связанной с заявками на дружбу."""
 
     @staticmethod
     @transaction.atomic
     @handle_not_found
     def accept_friend_request(request_id, user):
-        """
-        Принимает заявку на дружбу,
-        изменяя её статус на 'Принято' и создавая объект Friendship.
+        """Принимает заявку на дружбу.
 
+        Изменяет статус заявки на 'Принято' и создавая объект Friendship.
         """
         friend_request = FriendRequest.objects.get(
             pk=request_id, to_user=user, status="Pending"
@@ -50,10 +47,7 @@ class FriendRequestService:
     @transaction.atomic
     @handle_not_found
     def decline_friend_request(request_id, user):
-        """
-        Отклоняет заявку на дружбу, изменяя её статус на 'Отклонено'.
-
-        """
+        """Отклоняет заявку на дружбу, изменяя её статус на 'Отклонено'."""
         friend_request = FriendRequest.objects.get(
             pk=request_id, to_user=user, status="Pending"
         )
