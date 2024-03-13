@@ -213,6 +213,22 @@ class EventViewSet(ModelViewSet):
         IsAdminOrAuthorOrReadOnly,
     ]
 
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="myevents",
+        permission_classes=(IsAuthenticated,),
+    )
+    def my_events(self, request):
+        """Вывод мероприятий текущего пользователя."""
+        events = Event.objects.filter(
+            event__is_organizer=True, event__user=self.request.user
+        )
+        serializer = EventSerializer(
+            events, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @swagger_auto_schema(
         responses={
             401: openapi.Response(
