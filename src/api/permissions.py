@@ -31,14 +31,14 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsRecipient(permissions.BasePermission):
-    """
-    Проверка разрешения, что текущий пользователь является
+    """Проверка разрешения, что текущий пользователь является.
+
     получателем заявки на дружбу.
     """
 
     def has_object_permission(self, request, view, obj):
-        """
-        Возвращает True,
-        если текущий пользователь является получателем заявки на дружбу
+        """Возвращает True.
+
+        Eсли текущий пользователь является получателем заявки на дружбу.
         """
         return obj.to_user == request.user
