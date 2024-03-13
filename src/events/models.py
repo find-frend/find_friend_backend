@@ -71,8 +71,16 @@ class EventInterest(models.Model):
 class EventMember(models.Model):
     """Модель связи мероприятия и участников."""
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="event",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user",
+    )
     is_organizer = models.BooleanField()
 
     class Meta:
