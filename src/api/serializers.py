@@ -252,6 +252,7 @@ class EventSerializer(ModelSerializer):
 
     # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
+    members_count = serializers.IntegerField(required=False)
 
     class Meta:
         model = Event
@@ -266,6 +267,7 @@ class EventSerializer(ModelSerializer):
             "city",
             "event_price",
             "image",
+            "members_count",
         )
 
     '''

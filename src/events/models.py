@@ -60,6 +60,10 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    def members_count(self):
+        """Получение числа участников мероприятия."""
+        return self.members.count()
+
 
 class EventInterest(models.Model):
     """Модель связи мероприятия и интересов."""
