@@ -1,13 +1,14 @@
 from django.db.models import Q
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers  # , status
-
-# from rest_framework.exceptions import ValidationError
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
 from events.models import Event, EventMember
 from users.models import (
+    Blacklist,
     City,
     FriendRequest,
     Friendship,
@@ -75,11 +76,20 @@ class MyUserBaseSerializer(serializers.Serializer):
 class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     """Сериализатор пользователя."""
 
+    is_blocked = SerializerMethodField(read_only=True)
+
     city = SlugRelatedField(
         slug_field="name",
         queryset=City.objects.all(),
         required=False,
         allow_null=True,
+    )
+    email = serializers.EmailField(
+        max_length=settings.MAX_LENGTH_EMAIL,
+        min_length=settings.MIN_LENGTH_EMAIL,
+        allow_blank=False,
+        required=False,
+        read_only=True,
     )
     first_name = serializers.CharField(
         max_length=settings.MAX_LENGTH_CHAR,
@@ -103,6 +113,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         model = User
         fields = (
             "id",
+            "email",
             "first_name",
             "last_name",
             "birthday",
@@ -118,7 +129,9 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             "purpose",
             "network_nick",
             "additionally",
+            "is_blocked",
         )
+
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
     def create(self, validated_data):
@@ -173,6 +186,15 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         ) or obj == request.user:
             return obj.network_nick
         return None
+
+    def get_is_blocked(self, blocked_user):
+        """Метод сериализатора для просмотра блокировки пользователя."""
+        user = self.context.get("request").user
+        if user.is_anonymous:
+            return False
+        return Blacklist.objects.filter(
+            user=user, blocked_user=blocked_user
+        ).exists()
 
 
 class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
@@ -350,3 +372,29 @@ class CitySerializer(ModelSerializer):
     class Meta:
         model = City
         fields = ("id", "name")
+
+
+class BlacklistSerializer(MyUserSerializer):
+    """Сериализатор черного списка."""
+
+    class Meta(MyUserSerializer.Meta):
+        fields = MyUserSerializer.Meta.fields
+        read_only_fields = ("email", "first_name", "last_name")
+
+    def validate(self, data):
+        """Валидация черного списка."""
+        blocked_user = self.instance
+        user = self.context.get("request").user
+        if Blacklist.objects.filter(
+            blocked_user=blocked_user, user=user
+        ).exists():
+            raise ValidationError(
+                detail="Повторная блокировка пользователя невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if user == blocked_user:
+            raise ValidationError(
+                detail="Блокировка себя невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data

@@ -24,6 +24,8 @@ from config.settings import (
 # from .utils import make_thumbnail
 from .validators import INVALID_SYMBOLS_MSG, validate_birthday
 
+# from typing import Collection
+
 
 class FriendRequestManager(models.Manager):
     """Менеджер для модели FriendRequest.
@@ -226,7 +228,7 @@ class User(AbstractUser):
     def save_resized_image(self, image, filename):
         """Сохранение измененного изображения."""
         with ContentFile(b"") as content_file:
-            image.save(content_file, format=image.format)
+            # image.save(content_file, format=image.format)
             self.avatar.save(filename, content_file, save=False)
 
     def save(self, *args, **kwargs):
@@ -273,6 +275,10 @@ class User(AbstractUser):
     def friends_count(self):
         """Получение количества друзей пользователя."""
         return self.friends.count()
+
+    def is_blocked(self, user):
+        """Проверка нахождения пользователя в черном списке."""
+        return Blacklist.objects.filter(blocked_user=self, user=user).exists()
 
 
 class Interest(models.Model):
@@ -442,3 +448,43 @@ def password_reset_token_created(
         # Почта получателя:
         [reset_password_token.user.email],
     )
+
+
+class Blacklist(models.Model):
+    """Модель хранения черного списка пользователей."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocker",
+        verbose_name="Пользователь",
+    )
+    blocked_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocked",
+        verbose_name="Блокирован",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=(
+                    "user",
+                    "blocked_user",
+                ),
+                name="Unique_Blacklist",
+            )
+        ]
+        verbose_name = "Черный список"
+        verbose_name_plural = "Черные списки"
+
+    def clean(self):
+        """Валидация блокировки себя."""
+        if self.user == self.blocked_user:
+            raise ValidationError("Пользователь не может блокировать себя.")
+
+    def save(self, *args, **kwargs):
+        """Кастомный save."""
+        self.full_clean()
+        return super().save(*args, **kwargs)
