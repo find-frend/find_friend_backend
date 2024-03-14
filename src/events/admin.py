@@ -35,11 +35,10 @@ class EventAdmin(admin.ModelAdmin):
         "city",
         "event_price",
     )
-    search_fields = ("name",)
     list_filter = (CityEventFilter,)
     # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
-    search_fields = ("name",)
+    search_fields = ["name", "event_type", "date", "city__name"]
     readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")

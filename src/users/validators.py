@@ -4,21 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from config import settings
-
-INVALID_SYMBOLS_MSG = "Введены недопустимые символы."
-INVALID_EMAIL_MSG = "Некорректный адрес электронной почты."
-FIRST_NAME_LENGTH_MSG = (
-    f"Имя должно содержать от {settings.MIN_LENGTH_CHAR} до "
-    f"{settings.MAX_LENGTH_CHAR} символов."
-)
-LAST_NAME_LENGTH_MSG = (
-    f"Фамилия должна содержать от {settings.MIN_LENGTH_CHAR} до "
-    f"{settings.MAX_LENGTH_CHAR} символов."
-)
-EMAIL_LENGTH_MSG = (
-    f"Почта должна содержать от {settings.MIN_LENGTH_EMAIL} до "
-    f"{settings.MAX_LENGTH_EMAIL} символов."
-)
+from config.constants import messages
 
 
 class PasswordLengthValidator:
@@ -73,3 +59,34 @@ def validate_birthday(birthday):
             "Возраст больше 120 лет! Проверьте дату рождения."
         )
     return birthday
+
+
+def validate_email(email):
+    """Валидация почты."""
+    if any(ord(char) > 127 for char in email):
+        raise ValidationError(messages.EMAIL_ENGLISH_ONLY_MSG)
+
+    if (
+        len(email) < settings.MIN_LENGTH_EMAIL
+        or len(email) > settings.MAX_LENGTH_EMAIL
+    ):
+        raise ValidationError(messages.EMAIL_LENGTH_MSG)
+
+    if not email.strip():
+        raise ValidationError(messages.EMPTY_FIELD_MSG)
+
+    return email
+
+
+def validate_password(password):
+    """Валидация пароля."""
+    if (
+        len(password) < settings.MIN_LENGTH_PASSWORD
+        or len(password) > settings.MAX_LENGTH_PASSWORD
+    ):
+        raise ValidationError(messages.PASSWORD_LENGTH_MSG)
+
+    if not password.strip():
+        raise ValidationError(messages.EMPTY_FIELD_MSG)
+
+    return password

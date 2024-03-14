@@ -31,6 +31,7 @@ THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
     "djoser",
+    "django_rest_passwordreset",
     "drf_yasg",
     "django_filters",
     "admin_auto_filters",
@@ -152,6 +153,7 @@ DJOSER = {
         "user": "api.serializers.MyUserSerializer",
         "user_create": "api.serializers.MyUserCreateSerializer",
         "current_user": "api.serializers.MyUserSerializer",
+        "token_create": "api.serializers.CustomTokenCreateSerializer",
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
@@ -160,6 +162,28 @@ DJOSER = {
     },
     "HIDE_USERS": False,
 }
+
+DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
+    "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
+    "OPTIONS": {
+        "min_number": 100000,
+        "max_number": 999999,
+    },
+}
+
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+    EMAIL_FILE_PATH = BASE_DIR / "tmp/emails"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.yandex.ru"
+    EMAIL_PORT = 465
+    EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = True
+
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
 LANGUAGE_CODE = "ru"
 
@@ -197,3 +221,5 @@ MAX_LENGTH_EVENT = 50
 MIN_LENGTH_PASSWORD = 8
 MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500
+MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
+MAX_FILE_SIZE_MB = 8
