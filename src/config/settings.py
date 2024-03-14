@@ -28,6 +28,7 @@ DJANGO_APPS = (
 )
 
 THIRD_PARTY_APPS = (
+    "daphne",
     "rest_framework.authtoken",
     "rest_framework",
     "djoser",
@@ -108,6 +109,8 @@ LOGGING = {
 }
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+ASGI_APPLICATION = "config.asgi.application"
 
 
 if DEBUG:
