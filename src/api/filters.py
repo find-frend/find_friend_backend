@@ -1,5 +1,7 @@
 from datetime import date
 
+import django_filters
+from django.db.models import Q
 from django.utils import timezone
 from django_filters import rest_framework as filters
 
@@ -48,14 +50,32 @@ class UserFilter(filters.FilterSet):
         )
 
 
+class OrganizerNameFilter(django_filters.Filter):
+    """Класс фильтрации для мероприятий."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации мероприятий по имени/фамилии организатора."""
+        if value:
+            return queryset.filter(
+                Q(event__is_organizer=True)
+                & (
+                    Q(event__user__last_name__icontains=value)
+                    | Q(event__user__first_name__icontains=value)
+                )
+            )
+        return queryset
+
+
 class EventsFilter(filters.FilterSet):
     """Класс фильтрации мероприятий."""
+
+    organizer = OrganizerNameFilter()
 
     # interests = filters.AllValuesMultipleFilter(field_name="interests__name")
 
     class Meta:
         model = Event
-        fields = ["event_type", "date", "city", "city__name"]
+        fields = ["event_type", "date", "city", "city__name", "organizer"]
 
 
 '''
