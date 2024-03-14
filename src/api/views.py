@@ -13,6 +13,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from events.models import Event
 from users.models import Blacklist, City, FriendRequest, Interest, User
 
+
 from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import (

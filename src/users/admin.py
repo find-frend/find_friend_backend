@@ -196,14 +196,17 @@ class MyUserAdmin(UserAdmin):
 
 @admin.register(Friendship)
 class FriendshipAdmin(admin.ModelAdmin):
-    """.
-
-    Админка для модели Friendship,
-    предоставляет настройки интерфейса администратора.
-    """
+    """Админка для модели Friendship."""
 
     list_display = ("initiator", "friend", "created_at")
-    search_fields = ("initiator__username", "friend__username")
+    search_fields = (
+        "initiator__email",
+        "friend__email",
+        "initiator__first_name",
+        "friend__first_name",
+        "initiator__last_name",
+        "friend__last_name",
+    )
     list_filter = ("created_at",)
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
@@ -211,11 +214,7 @@ class FriendshipAdmin(admin.ModelAdmin):
 
 @admin.register(FriendRequest)
 class FriendRequestAdmin(admin.ModelAdmin):
-    """.
-
-    Админка для модели FriendRequest,
-    предоставляет настройки интерфейса администратора.
-    """
+    """Админка для модели FriendRequest."""
 
     list_display = (
         "from_user",
@@ -225,7 +224,15 @@ class FriendRequestAdmin(admin.ModelAdmin):
         "updated_at",
         "id",
     )
-    search_fields = ("from_user__username", "to_user__username", "status")
+    search_fields = (
+        "from_user__email",
+        "to_user__email",
+        "from_user__first_name",
+        "to_user__first_name",
+        "from_user__last_name",
+        "to_user__last_name",
+        "status",
+    )
     list_filter = ("status", "created_at", "updated_at")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
