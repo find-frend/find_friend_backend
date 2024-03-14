@@ -275,13 +275,13 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         return data
 
 
-
 class GetMembersField(serializers.RelatedField):
     """Сериализатор списка участников мероприятия."""
 
     def to_representation(self, value):
         """Представление списка участников мероприятия."""
         return {"id": value.pk}
+
 
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
