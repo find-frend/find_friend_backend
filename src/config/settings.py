@@ -174,6 +174,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = BASE_DIR / "tmp/emails"
+    DEFAULT_FROM_EMAIL = "local@example.com"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = "smtp.yandex.ru"
