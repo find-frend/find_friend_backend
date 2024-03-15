@@ -156,6 +156,7 @@ DJOSER = {
         "user": "api.serializers.MyUserSerializer",
         "user_create": "api.serializers.MyUserCreateSerializer",
         "current_user": "api.serializers.MyUserSerializer",
+        "token_create": "api.serializers.CustomTokenCreateSerializer",
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
@@ -223,3 +224,5 @@ MAX_LENGTH_EVENT = 50
 MIN_LENGTH_PASSWORD = 8
 MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500
+MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
+MAX_FILE_SIZE_MB = 8

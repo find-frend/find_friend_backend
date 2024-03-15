@@ -60,6 +60,10 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    def members_count(self):
+        """Получение числа участников мероприятия."""
+        return self.members.count()
+
 
 class EventInterest(models.Model):
     """Модель связи мероприятия и интересов."""
@@ -71,8 +75,16 @@ class EventInterest(models.Model):
 class EventMember(models.Model):
     """Модель связи мероприятия и участников."""
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="event",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user",
+    )
     is_organizer = models.BooleanField()
 
     class Meta:

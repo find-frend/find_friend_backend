@@ -12,6 +12,7 @@ from .views import (
     MyUserViewSet,
 )
 
+
 app_name = "api"
 
 router = CustomRouter()

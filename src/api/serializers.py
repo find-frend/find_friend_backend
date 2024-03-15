@@ -1,13 +1,22 @@
+from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email as django_validate_email
 from django.db.models import Q
-from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers  # , status
-
-# from rest_framework.exceptions import ValidationError
+from djoser.serializers import (
+    TokenCreateSerializer,
+    UserCreateSerializer,
+    UserSerializer,
+)
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config import settings
+from config.constants import messages
 from events.models import Event, EventMember
 from users.models import (
+    Blacklist,
     City,
     FriendRequest,
     Friendship,
@@ -15,12 +24,41 @@ from users.models import (
     User,
     UserInterest,
 )
-from users.validators import (
-    EMAIL_LENGTH_MSG,
-    FIRST_NAME_LENGTH_MSG,
-    INVALID_EMAIL_MSG,
-    LAST_NAME_LENGTH_MSG,
-)
+from users.validators import validate_email, validate_password
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):
+    """Кастомный сериализатор создания токена при аутентификации."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        """Валидация данных при аутентификации."""
+        email = attrs.get("email", "")
+        password = attrs.get("password", "")
+
+        validate_email(email)
+        try:
+            django_validate_email(email)
+        except DjangoValidationError:
+            raise ValidationError(messages.INVALID_EMAIL_MSG)
+        validate_password(password)
+
+        params = {"email": email}
+        self.user = authenticate(
+            request=self.context.get("request"), **params, password=password
+        )
+        if not self.user:
+            self.user = User.objects.filter(**params).first()
+            if self.user and not self.user.check_password(password):
+                self.fail("invalid_credentials")
+
+        if self.user and self.user.is_active:
+            return attrs
+
+        self.fail("invalid_credentials")
+        return None
 
 
 class InterestSerializer(ModelSerializer):
@@ -52,21 +90,21 @@ class MyUserBaseSerializer(serializers.Serializer):
         extra_kwargs = {
             "email": {
                 "error_messages": {
-                    "max_length": EMAIL_LENGTH_MSG,
-                    "min_length": EMAIL_LENGTH_MSG,
-                    "invalid": INVALID_EMAIL_MSG,
+                    "max_length": messages.EMAIL_LENGTH_MSG,
+                    "min_length": messages.EMAIL_LENGTH_MSG,
+                    "invalid": messages.INVALID_EMAIL_MSG,
                 }
             },
             "first_name": {
                 "error_messages": {
-                    "max_length": FIRST_NAME_LENGTH_MSG,
-                    "min_length": FIRST_NAME_LENGTH_MSG,
+                    "max_length": messages.FIRST_NAME_LENGTH_MSG,
+                    "min_length": messages.FIRST_NAME_LENGTH_MSG,
                 }
             },
             "last_name": {
                 "error_messages": {
-                    "max_length": LAST_NAME_LENGTH_MSG,
-                    "min_length": LAST_NAME_LENGTH_MSG,
+                    "max_length": messages.LAST_NAME_LENGTH_MSG,
+                    "min_length": messages.LAST_NAME_LENGTH_MSG,
                 }
             },
         }
@@ -75,11 +113,20 @@ class MyUserBaseSerializer(serializers.Serializer):
 class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
     """Сериализатор пользователя."""
 
+    is_blocked = SerializerMethodField(read_only=True)
+
     city = SlugRelatedField(
         slug_field="name",
         queryset=City.objects.all(),
         required=False,
         allow_null=True,
+    )
+    email = serializers.EmailField(
+        max_length=settings.MAX_LENGTH_EMAIL,
+        min_length=settings.MIN_LENGTH_EMAIL,
+        allow_blank=False,
+        required=False,
+        read_only=True,
     )
     first_name = serializers.CharField(
         max_length=settings.MAX_LENGTH_CHAR,
@@ -103,6 +150,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         model = User
         fields = (
             "id",
+            "email",
             "first_name",
             "last_name",
             "birthday",
@@ -118,7 +166,9 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             "purpose",
             "network_nick",
             "additionally",
+            "is_blocked",
         )
+
         extra_kwargs = {**MyUserBaseSerializer.Meta.extra_kwargs}
 
     def create(self, validated_data):
@@ -173,6 +223,15 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         ) or obj == request.user:
             return obj.network_nick
         return None
+
+    def get_is_blocked(self, blocked_user):
+        """Метод сериализатора для просмотра блокировки пользователя."""
+        user = self.context.get("request").user
+        if user.is_anonymous:
+            return False
+        return Blacklist.objects.filter(
+            user=user, blocked_user=blocked_user
+        ).exists()
 
 
 class MyUserCreateSerializer(UserCreateSerializer, MyUserBaseSerializer):
@@ -239,6 +298,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         return data
 
 
+
 class GetMembersField(serializers.RelatedField):
     """Сериализатор списка участников мероприятия."""
 
@@ -246,12 +306,12 @@ class GetMembersField(serializers.RelatedField):
         """Представление списка участников мероприятия."""
         return {"id": value.pk}
 
-
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
 
     # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
+    members_count = serializers.IntegerField(required=False)
 
     class Meta:
         model = Event
@@ -266,6 +326,7 @@ class EventSerializer(ModelSerializer):
             "city",
             "event_price",
             "image",
+            "members_count",
         )
 
     '''
@@ -350,3 +411,29 @@ class CitySerializer(ModelSerializer):
     class Meta:
         model = City
         fields = ("id", "name")
+
+
+class BlacklistSerializer(MyUserSerializer):
+    """Сериализатор черного списка."""
+
+    class Meta(MyUserSerializer.Meta):
+        fields = MyUserSerializer.Meta.fields
+        read_only_fields = ("email", "first_name", "last_name")
+
+    def validate(self, data):
+        """Валидация черного списка."""
+        blocked_user = self.instance
+        user = self.context.get("request").user
+        if Blacklist.objects.filter(
+            blocked_user=blocked_user, user=user
+        ).exists():
+            raise ValidationError(
+                detail="Повторная блокировка пользователя невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if user == blocked_user:
+            raise ValidationError(
+                detail="Блокировка себя невозможна",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
