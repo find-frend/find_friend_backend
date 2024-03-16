@@ -274,11 +274,6 @@ class User(AbstractUser):
 
         super().save(*args, **kwargs)
 
-    @property
-    def max_file_size(self):
-        """Максимальный размер файла (в байтах)."""
-        return 8 * 1024 * 1024
-
     def age(self):
         """Вычисление возраста пользователя."""
         if self.birthday:
