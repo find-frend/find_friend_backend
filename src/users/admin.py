@@ -1,13 +1,12 @@
 from datetime import date, timedelta
 
+from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-from admin_auto_filters.filters import AutocompleteFilter
-
-from .models import City, FriendRequest, Friendship, Interest, User
+from .models import Blacklist, City, FriendRequest, Friendship, Interest, User
 
 
 @admin.register(City)
@@ -237,3 +236,16 @@ class FriendRequestAdmin(admin.ModelAdmin):
     list_filter = ("status", "created_at", "updated_at")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
+
+
+@admin.register(Blacklist)
+class BlacklistAdmin(admin.ModelAdmin):
+    """Админка для модели Blackkist."""
+
+    list_display = ("user", "blocked_user")
+    search_fields = (
+        "user__first_name",
+        "user__last_name",
+        "blocked_user__first_name",
+        "blocked_user__last_name",
+    )
