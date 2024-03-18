@@ -18,6 +18,8 @@ ALLOWED_HOSTS = (
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
+ESSENTIAL_APPS = ("daphne",)
+
 DJANGO_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
@@ -28,7 +30,6 @@ DJANGO_APPS = (
 )
 
 THIRD_PARTY_APPS = (
-    "daphne",
     "rest_framework.authtoken",
     "rest_framework",
     "djoser",
@@ -44,7 +45,7 @@ LOCAL_APPS = (
     "events",
 )
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
