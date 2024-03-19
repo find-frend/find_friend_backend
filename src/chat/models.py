@@ -10,13 +10,13 @@ class Chat(models.Model):
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="chat_starter",
+        related_name="started_chats",
     )
     receiver = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="chat_participant",
+        related_name="participates_in_chats",
     )
     start_time = models.DateTimeField(auto_now_add=True)
 
@@ -37,6 +37,7 @@ class Message(models.Model):
     chat = models.ForeignKey(
         Chat,
         on_delete=models.CASCADE,
+        related_name="chat_messages",
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
