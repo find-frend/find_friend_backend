@@ -12,12 +12,12 @@ from django.db import models
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
-
 from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
 from config.constants import messages
 from config.settings import (
+    DEFAULT_FROM_EMAIL,
     MAX_FILE_SIZE,
     MAX_FILE_SIZE_MB,
     MAX_LENGTH_CHAR,
@@ -467,7 +467,7 @@ def password_reset_token_created(
         # Сообщение:
         email_plaintext_message,
         # Отправитель:
-        "noreply@somehost.local",
+        DEFAULT_FROM_EMAIL,
         # Почта получателя:
         [reset_password_token.user.email],
     )
