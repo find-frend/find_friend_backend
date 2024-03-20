@@ -32,6 +32,9 @@ class Messages(object):
     )
     CHAT_DOES_NOT_EXIST = "Такого чата не существует."
     USER_NOT_ALLOWED_TO_VIEW_CHAT = "Вы не можете просматривать этот чат."
+    USER_IS_NOT_FRIEND = (
+        "Чтобы начать чат, вы должны быть в друзьях с пользователем %s."
+    )
 
 
 messages = Messages()
