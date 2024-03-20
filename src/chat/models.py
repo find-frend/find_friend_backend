@@ -40,7 +40,7 @@ class Message(models.Model):
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="message_sender",
+        related_name="sent_messages",
         verbose_name="Отправитель",
     )
     text = models.CharField(
