@@ -131,9 +131,7 @@ class MyUserViewSet(UserViewSet):
     )
     def my_events(self, request):
         """Вывод мероприятий текущего пользователя."""
-        queryset = Event.objects.filter(
-            event__is_organizer=True, event__user=self.request.user
-        )
+        queryset = Event.objects.filter(event__user=self.request.user)
         serializer = MyEventSerializer(
             queryset, many=True, context={"request": request}
         )
