@@ -410,11 +410,7 @@ class MyEventSerializer(ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ("name",)
-
-    # def to_representation(self, value):
-    #     """Представление списка мероприятий пользователя."""
-    #     return {"name": value.event}
+        fields = ("id", "name")
 
 
 class CitySerializer(ModelSerializer):
