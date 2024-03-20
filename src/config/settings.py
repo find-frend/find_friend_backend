@@ -32,6 +32,7 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
+    "channels",
     "djoser",
     "django_rest_passwordreset",
     "drf_yasg",
@@ -220,6 +221,15 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 MIN_LENGTH_EMAIL = 5
