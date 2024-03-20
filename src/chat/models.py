@@ -1,5 +1,6 @@
 from django.db import models
 
+from config.settings import MAX_CHAT_MESSAGE_LENGTH
 from users.models import User
 
 
@@ -26,6 +27,15 @@ class Chat(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "initiator",
+                    "receiver",
+                ],
+                name="unique_chat_participants",
+            )
+        ]
         verbose_name = "Чат"
         verbose_name_plural = "Чаты"
 
@@ -45,7 +55,7 @@ class Message(models.Model):
     )
     text = models.CharField(
         "Текст",
-        max_length=200,
+        max_length=MAX_CHAT_MESSAGE_LENGTH,
         blank=True,
     )
     chat = models.ForeignKey(
