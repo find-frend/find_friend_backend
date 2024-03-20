@@ -12,7 +12,6 @@ from .views import (
     MyUserViewSet,
 )
 
-
 app_name = "api"
 
 router = CustomRouter()
@@ -29,4 +28,5 @@ router.register(r"friends", FriendRequestViewSet, basename="friends")
 urlpatterns = [
     path("", include(router.urls)),
     path("auth/", include("djoser.urls.authtoken")),
+    path("chats/", include("chat.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

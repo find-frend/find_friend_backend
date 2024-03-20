@@ -2,6 +2,8 @@ from config import settings
 
 
 class Messages(object):
+    """Сообщения."""
+
     EMAIL_ENGLISH_ONLY_MSG = (
         "Почта должна содержать буквы только английского алфавита."
     )
@@ -25,6 +27,11 @@ class Messages(object):
         f"Почта должна содержать от {settings.MIN_LENGTH_EMAIL} до "
         f"{settings.MAX_LENGTH_EMAIL} символов."
     )
+    CANNOT_START_CHAT_WITH_NONEXISTENT_USER = (
+        "Нельзя начать чат с несуществующим пользователем."
+    )
+    CHAT_DOES_NOT_EXIST = "Такого чата не существует."
+    USER_NOT_ALLOWED_TO_VIEW_CHAT = "Вы не можете просматривать этот чат."
 
 
 messages = Messages()
