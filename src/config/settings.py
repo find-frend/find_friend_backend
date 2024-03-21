@@ -41,10 +41,10 @@ THIRD_PARTY_APPS = (
 )
 
 LOCAL_APPS = (
-    "api",
-    "users",
-    "events",
-    "chat",
+    "api.apps.ApiConfig",
+    "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
+    "chat.apps.ChatConfig",
 )
 
 INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -107,7 +107,12 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
-        }
+        },
+        "daphne": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 
@@ -227,7 +232,12 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [
+                (
+                    "127.0.0.1" if DEBUG else os.getenv("REDIS_HOST", "redis"),
+                    os.getenv("REDIS_PORT", 6379),
+                )
+            ],
         },
     },
 }
