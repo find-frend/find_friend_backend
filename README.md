@@ -312,10 +312,10 @@ _*Спецификации API в файле `openapi-schema.yml` в папке 
 Для тестирования будем использовать [Postman](https://www.postman.com/downloads/).
 
 Начнем с создания нового запроса:
-![[001.png]]
+[Imgur](https://imgur.com/jwLwxoo)
 
 По умолчанию создается HTTP запрос. Необходимо изменить тип на Websocket:
-![[002.png]]
+[Imgur](https://imgur.com/yvy9JtE)
 
 Сохраняем запрос: `Save` -> Request name "User 1" -> Внизу слева `New Collection` -> Название коллекции "Find Friend" -> `Save`.
 
@@ -326,7 +326,7 @@ _*Спецификации API в файле `openapi-schema.yml` в папке 
 Прописываем еще две переменных - `authToken1` и `authToken2`. Значениями должны быть токены аутентификации, полученные при создании юзеров. Сохраняем.
 
 Должно получиться вот так:
-![[003.png]]
+[Imgur](https://imgur.com/iYIEa58)
 
 Теперь настроим запрос `User 1`.
 
