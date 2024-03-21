@@ -341,6 +341,8 @@ _*Спецификации API в файле `openapi-schema.yml` в папке 
 
 В настроках `User 2` переходим в Headers, меняем Value на `Token {{authToken2}}`, сохраняем (`Ctrl` + `S`).
 
+Для работы чатов требуется Redis. Запускаем его в докере: `docker run -d -p 6379:6379 redis`.
+
 Запускаем локальный dev-сервер (`python manage.py runserver`), если еще не запущен. При запуске в логах должна быть срочка `Starting ASGI/Daphne version 4.1.0 development server at http://127.0.0.1:8000/`. Это свидетельствует о том, что командой runserver теперь управляет daphne, что и позволит нам установить websocket соединение.
 
 Теперь в обоих запросах нажимаем на кнопку Connect. Внизу в разделе Response для обоих юзеров должно отобразиться `Connected to ws://127.0.0.1:8000/ws/chat/1/` с зеленой галочкой и статус Connected.
