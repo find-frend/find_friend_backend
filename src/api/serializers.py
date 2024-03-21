@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
-from config import settings
+from config import constants
 from config.constants import messages
 from events.models import Event, EventMember
 from users.models import (
@@ -122,21 +122,21 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         allow_null=True,
     )
     email = serializers.EmailField(
-        max_length=settings.MAX_LENGTH_EMAIL,
-        min_length=settings.MIN_LENGTH_EMAIL,
+        max_length=constants.MAX_LENGTH_EMAIL,
+        min_length=constants.MIN_LENGTH_EMAIL,
         allow_blank=False,
         required=False,
         read_only=True,
     )
     first_name = serializers.CharField(
-        max_length=settings.MAX_LENGTH_CHAR,
-        min_length=settings.MIN_LENGTH_CHAR,
+        max_length=constants.MAX_LENGTH_CHAR,
+        min_length=constants.MIN_LENGTH_CHAR,
         allow_blank=False,
         required=False,
     )
     last_name = serializers.CharField(
-        max_length=settings.MAX_LENGTH_CHAR,
-        min_length=settings.MIN_LENGTH_CHAR,
+        max_length=constants.MAX_LENGTH_CHAR,
+        min_length=constants.MIN_LENGTH_CHAR,
         allow_blank=False,
         required=False,
     )
