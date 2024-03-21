@@ -83,7 +83,7 @@ DEBUG=False
 DJANGO_SECRET_KEY=somegeneratedsecretkey
 
 # Выставляем так, как ниже
-DJANGO_ALLOWED_HOSTS=127.0.0.1 localhost backend
+DJANGO_ALLOWED_HOSTS=127.0.0.1 localhost backend 158.160.60.2
 
 DB_ENGINE=django.db.backends.postgresql_psycopg2
 POSTGRES_DB=findafriend

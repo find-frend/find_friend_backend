@@ -272,7 +272,7 @@ class MyUserGetSerializer(UserSerializer):
 class FriendRequestSerializer(serializers.ModelSerializer):
     """Сериализатор для модели FriendRequest.
 
-    Обрабатывает входные и выходные данные API заявок на дружбу.
+    обрабатывает входные и выходные данные API заявок на дружбу.
     """
 
     class Meta:
@@ -307,7 +307,7 @@ class GetMembersField(serializers.RelatedField):
 
 
 class EventSerializer(ModelSerializer):
-    """Сериализатор мероприятия пользователя."""
+    """Сериализатор мероприятия."""
 
     # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
@@ -408,6 +408,14 @@ class EventSerializer(ModelSerializer):
                 is_organizer=is_organizers[i],
             )
         return super().update(instance, validated_data)
+
+
+class MyEventSerializer(ModelSerializer):
+    """Сериализатор списка мероприятий пользователя."""
+
+    class Meta:
+        model = Event
+        fields = ("id", "name")
 
 
 class CitySerializer(ModelSerializer):

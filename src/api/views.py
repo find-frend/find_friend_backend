@@ -26,6 +26,7 @@ from .serializers import (
     EventSerializer,
     FriendRequestSerializer,
     InterestSerializer,
+    MyEventSerializer,
     MyUserCreateSerializer,
     MyUserSerializer,
 )
@@ -118,6 +119,20 @@ class MyUserViewSet(UserViewSet):
             id=self.request.user.id
         )
         serializer = MyUserSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my_events",
+        permission_classes=(IsAuthenticated,),
+    )
+    def my_events(self, request):
+        """Вывод мероприятий текущего пользователя."""
+        queryset = Event.objects.filter(event__user=self.request.user)
+        serializer = MyEventSerializer(
             queryset, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -243,7 +258,7 @@ class FriendRequestViewSet(ModelViewSet):
 
 
 class EventViewSet(ModelViewSet):
-    """Вьюсет мероприятия пользователя."""
+    """Отображение мероприятий."""
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
