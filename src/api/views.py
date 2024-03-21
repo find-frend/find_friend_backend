@@ -13,7 +13,6 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from events.models import Event
 from users.models import Blacklist, City, FriendRequest, Interest, User
 
-
 from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
 from .permissions import (
@@ -257,7 +256,6 @@ class EventViewSet(ModelViewSet):
     search_fields = [
         "name",
         "event_type",
-        "date",
         "city__name",
     ]
     pagination_class = EventPagination
