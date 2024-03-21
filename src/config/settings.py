@@ -18,6 +18,8 @@ ALLOWED_HOSTS = (
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
+ESSENTIAL_APPS = ("daphne",)
+
 DJANGO_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
@@ -30,6 +32,7 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
+    "channels",
     "djoser",
     "django_rest_passwordreset",
     "drf_yasg",
@@ -38,12 +41,13 @@ THIRD_PARTY_APPS = (
 )
 
 LOCAL_APPS = (
-    "api",
-    "users",
-    "events",
+    "api.apps.ApiConfig",
+    "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
+    "chat.apps.ChatConfig",
 )
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -103,11 +107,18 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
-        }
+        },
+        "daphne": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+ASGI_APPLICATION = "config.asgi.application"
 
 
 if DEBUG:
@@ -217,6 +228,20 @@ REST_FRAMEWORK = {
     ],
 }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                (
+                    "127.0.0.1" if DEBUG else os.getenv("REDIS_HOST", "redis"),
+                    os.getenv("REDIS_PORT", 6379),
+                )
+            ],
+        },
+    },
+}
+
 MIN_LENGTH_EMAIL = 5
 MAX_LENGTH_EMAIL = 254
 MIN_LENGTH_CHAR = 2
@@ -227,3 +252,5 @@ MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500
 MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
 MAX_FILE_SIZE_MB = 8
+MAX_MESSAGES_IN_CHAT = 30
+MAX_CHAT_MESSAGE_LENGTH = 1000
