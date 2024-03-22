@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR.parent / ".env"
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
 
 load_dotenv(ENV_FILE)
 
@@ -86,35 +88,79 @@ TEMPLATES = [
     },
 ]
 
+CUSTOM_LOGGER_NAME = os.getenv("CUSTOM_LOGGER_NAME", "find_friends")
+DEFAULT_LOG_LEVEL = os.getenv(
+    "DEBUG_LOG_LEVEL" if DEBUG else "PROD_LOG_LEVEL", "INFO"
+)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "name_upper": {
+            "()": "config.logging.NameUpperFilter",
+        },
+    },
     "formatters": {
         "default": {
-            "format": "[DJANGO] %(levelname)s %(asctime)s %(module)s "
-            "%(name)s.%(funcName)s:%(lineno)s: %(message)s"
+            "format": (
+                "[{name_upper}] {levelname} {asctime} {name} "
+                "{module}.{funcName}:{lineno:d} {message}"
+            ),
+            "style": "{",
+        },
+        "verbose": {
+            "format": (
+                "[{name_upper}] {levelname} {asctime} | Thread / Process: "
+                "{threadName} {thread:d} {process:d} | Logger: {name} "
+                "File: {filename} Module/function/line: "
+                "{module}.{funcName}:{lineno:d} | {message}"
+            ),
+            "style": "{",
         },
     },
     "handlers": {
-        "console": {
+        "console_handler": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
+            "filters": ["name_upper"],
             "formatter": "default",
-        }
+        },
+        "file_handler": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filters": ["name_upper"],
+            "filename": f"{LOG_DIR}/{CUSTOM_LOGGER_NAME}.log",
+            "mode": "a",
+            "encoding": "utf-8",
+            "formatter": "verbose",
+            "backupCount": int(os.getenv("LOG_FILES_TO_KEEP", 5)),
+            "maxBytes": int(os.getenv("LOG_FILE_SIZE", 1024 * 1024 * 10)),
+        },
     },
     "loggers": {
         "": {
-            "handlers": ["console"],
-            "level": "DEBUG",
+            "handlers": ["console_handler"],
+            "level": DEFAULT_LOG_LEVEL,
+        },
+        "django": {
+            "handlers": ["console_handler", "file_handler"],
+            "level": DEFAULT_LOG_LEVEL,
             "propagate": False,
         },
         "daphne": {
-            "handlers": ["console"],
-            "level": "DEBUG",
+            "handlers": ["console_handler", "file_handler"],
+            "level": DEFAULT_LOG_LEVEL,
+            "propagate": False,
+        },
+        CUSTOM_LOGGER_NAME: {
+            "handlers": ["console_handler", "file_handler"],
+            "level": DEFAULT_LOG_LEVEL,
             "propagate": False,
         },
     },
 }
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 
