@@ -15,7 +15,17 @@ class NameUpperFilter(logging.Filter):
         return True
 
 
-def log(logger=logger):
+def get_level(level):
+    """Получение уровня логирования."""
+    if isinstance(level, int):
+        return level
+    lvl = logging.getLevelName(level)
+    if isinstance(lvl, int):
+        return lvl
+    return logging.DEBUG
+
+
+def log(level=logging.DEBUG, logger=logger):
     """Декоратор, логирующий аргументы функции и возвращаемые значения."""
 
     def decorator_log(func):
@@ -24,18 +34,24 @@ def log(logger=logger):
             args_repr = [repr(a) for a in args]
             kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
             signature = ", ".join(args_repr + kwargs_repr)
-            print(logger)
-            print(type(logger))
-            logger.debug(
-                f"Функция {func.__name__} вызвана с аргументами {signature}."
+            lvl = get_level(level)
+            logger.log(
+                lvl,
+                f"Функция {func.__name__} модуля {func.__module__} "
+                f"вызвана с аргументами {signature}.",
             )
             try:
                 result = func(*args, **kwargs)
-                logger.debug(f"Функция {func.__name__} вернула: {result}")
+                logger.log(
+                    lvl,
+                    f"Функция {func.__name__} модуля {func.__module__} "
+                    f"вернула: {result}",
+                )
                 return result
             except Exception as e:
                 logger.exception(
-                    f"В функции {func.__name__} вызвано исключение: {str(e)}"
+                    f"В функции {func.__name__} модуля {func.__module__} "
+                    f"вызвано исключение: {str(e)}"
                 )
                 raise e
 
