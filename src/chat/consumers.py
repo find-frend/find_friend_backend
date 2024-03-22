@@ -5,7 +5,7 @@ from channels.generic.websocket import WebsocketConsumer
 
 from chat.models import Chat, Message
 from chat.serializers import MessageSerializer
-from config.settings import MAX_MESSAGES_IN_CHAT
+from config.constants import MAX_MESSAGES_IN_CHAT
 
 
 class ChatConsumer(WebsocketConsumer):

@@ -1,6 +1,6 @@
 from django.db import models
 
-from config.settings import MAX_CHAT_MESSAGE_LENGTH
+from config.constants import MAX_CHAT_MESSAGE_LENGTH
 from users.models import User
 
 

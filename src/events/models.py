@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 
-from config.settings import MAX_LENGTH_EVENT
+from config.constants import MAX_LENGTH_EVENT
 from users.models import City, Interest, User
 
 

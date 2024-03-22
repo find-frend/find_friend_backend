@@ -3,7 +3,7 @@ from rest_framework import serializers
 from api.serializers import MyUserGetSerializer
 
 # from users.models import User
-from config.settings import MAX_MESSAGES_IN_CHAT
+from config.constants import MAX_MESSAGES_IN_CHAT
 
 from .models import Chat, Message
 
