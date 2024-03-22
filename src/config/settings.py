@@ -5,8 +5,11 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR.parent / ".env"
-LOG_DIR = BASE_DIR / "logs"
-LOG_DIR.mkdir(exist_ok=True)
+
+LOG_DIR = os.getenv("LOG_DIR_PATH", None)
+if not LOG_DIR:
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_DIR.mkdir(exist_ok=True)
 
 load_dotenv(ENV_FILE)
 
