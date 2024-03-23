@@ -101,7 +101,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-              cd /home/${{ secrets.USER }}/infra/prod/
+              cd /home/${{ secrets.USER }}/build/infra/prod/
               docker-compose -f ./docker-compose.prod.yaml config --quiet && printf "OK\n" || printf "ERROR\n" && exit 1
               docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
               docker exec prod-backend-1 python manage.py makemigrations
