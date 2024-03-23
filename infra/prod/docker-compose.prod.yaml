@@ -17,7 +17,6 @@ services:
     expose:
       - 8000
     depends_on:
-      - db
       - redis
     env_file:
       - ../../.env
@@ -36,7 +35,6 @@ services:
     expose:
       - 8001
     depends_on:
-      - db
       - redis
     env_file:
       - ../../.env
@@ -64,6 +62,5 @@ networks:
     external: true
 
 volumes:
-  db_data:
   static_value:
   media_value:
