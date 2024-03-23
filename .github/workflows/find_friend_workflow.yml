@@ -62,7 +62,7 @@ jobs:
     # После тестирования необходимо поменять на main
     if: github.ref_name == 'main'
     steps:
-      - name: Run bot in docker
+      - name: Copy config to host
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -94,7 +94,7 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo DB_HOST=${{ secrets.REDIS_HOST }} >> .env
             echo DB_HOST=${{ secrets.REDIS_PORT }} >> .env
-      - name: run container
+      - name: Run container
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
