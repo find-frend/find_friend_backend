@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from drf_yasg import openapi
@@ -10,17 +11,22 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
-from users.models import City, FriendRequest, Interest, User
-
+from users.models import Blacklist, City, FriendRequest, Interest, User
 
 from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
-from .permissions import IsAdminOrAuthorOrReadOnly, IsRecipient
-from .serializers import CitySerializer  # MyUserGetSerializer,
+from .permissions import (
+    IsAdminOrAuthorOrReadOnly,
+    IsAdminOrAuthorOrReadOnlyAndNotBlocked,
+    IsRecipient,
+)
+from .serializers import BlacklistSerializer  # MyUserGetSerializer,
 from .serializers import (
+    CitySerializer,
     EventSerializer,
     FriendRequestSerializer,
     InterestSerializer,
+    MyEventSerializer,
     MyUserCreateSerializer,
     MyUserSerializer,
 )
@@ -43,7 +49,7 @@ class MyUserViewSet(UserViewSet):
         "city__name",
     ]
     permission_classes = [
-        IsAdminOrAuthorOrReadOnly,
+        IsAdminOrAuthorOrReadOnlyAndNotBlocked,
     ]
 
     def get_serializer_class(self):
@@ -88,6 +94,17 @@ class MyUserViewSet(UserViewSet):
     )
     def list(self, request, *args, **kwargs):
         """Получение списка пользователей."""
+        if not request.user.is_staff:
+            blocks = Blacklist.objects.filter(blocked_user=request.user)
+            if blocks.exists():
+                blockers = []
+                for obj in blocks:
+                    blockers.append(obj.user.id)
+                queryset = User.objects.all().exclude(id__in=blockers)
+                serializer = MyUserSerializer(
+                    queryset, many=True, context={"request": request}
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
         return super().list(request, *args, **kwargs)
 
     @action(
@@ -105,6 +122,54 @@ class MyUserViewSet(UserViewSet):
             queryset, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my_events",
+        permission_classes=(IsAuthenticated,),
+    )
+    def my_events(self, request):
+        """Вывод мероприятий текущего пользователя."""
+        queryset = Event.objects.filter(event__user=self.request.user)
+        serializer = MyEventSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=[IsAuthenticated],
+    )
+    def block(self, request, **kwargs):
+        """Добавление/удаление пользователя в черный список."""
+        user = request.user
+        blocked_user_id = self.kwargs.get("id")
+        blocked_user = get_object_or_404(User, id=blocked_user_id)
+        if request.method == "POST":
+            serializer = BlacklistSerializer(
+                blocked_user, data=request.data, context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Blacklist.objects.create(user=user, blocked_user=blocked_user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        block = get_object_or_404(
+            Blacklist, user=user, blocked_user=blocked_user
+        )
+        block.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def blacklist(self, request):
+        """Получение черного списка."""
+        user = request.user
+        queryset = User.objects.filter(blocked__user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = BlacklistSerializer(
+            pages, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class FriendRequestViewSet(ModelViewSet):
@@ -193,7 +258,7 @@ class FriendRequestViewSet(ModelViewSet):
 
 
 class EventViewSet(ModelViewSet):
-    """Вьюсет мероприятия пользователя."""
+    """Отображение мероприятий."""
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -206,7 +271,6 @@ class EventViewSet(ModelViewSet):
     search_fields = [
         "name",
         "event_type",
-        "date",
         "city__name",
     ]
     pagination_class = EventPagination

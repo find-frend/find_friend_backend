@@ -92,6 +92,8 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            echo DB_HOST=${{ secrets.REDIS_HOST }} >> .env
+            echo DB_HOST=${{ secrets.REDIS_PORT }} >> .env
             cd infra/prod/
             docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
             docker exec prod-backend-1 python manage.py makemigrations

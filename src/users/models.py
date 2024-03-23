@@ -12,24 +12,26 @@ from django.db import models
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
-
 from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
-from config.constants import messages
-from config.settings import (
+from config.constants import (
     MAX_FILE_SIZE,
     MAX_FILE_SIZE_MB,
     MAX_LENGTH_CHAR,
     MAX_LENGTH_DESCRIBE,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_EVENT,
+    messages,
 )
+from config.settings import DEFAULT_FROM_EMAIL
 
 from .exceptions import ImageResizeError, ImageSizeError
 
 # from .utils import make_thumbnail
 from .validators import validate_birthday
+
+# from typing import Collection
 
 
 class FriendRequestManager(models.Manager):
@@ -297,6 +299,10 @@ class User(AbstractUser):
         """Получение количества друзей пользователя."""
         return self.friends.count()
 
+    def is_blocked(self, user):
+        """Проверка нахождения пользователя в черном списке."""
+        return Blacklist.objects.filter(blocked_user=self, user=user).exists()
+
 
 class Interest(models.Model):
     """Модель интересов."""
@@ -461,7 +467,47 @@ def password_reset_token_created(
         # Сообщение:
         email_plaintext_message,
         # Отправитель:
-        "noreply@somehost.local",
+        DEFAULT_FROM_EMAIL,
         # Почта получателя:
         [reset_password_token.user.email],
     )
+
+
+class Blacklist(models.Model):
+    """Модель хранения черного списка пользователей."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocker",
+        verbose_name="Пользователь",
+    )
+    blocked_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="blocked",
+        verbose_name="Блокирован",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=(
+                    "user",
+                    "blocked_user",
+                ),
+                name="Unique_Blacklist",
+            )
+        ]
+        verbose_name = "Черный список"
+        verbose_name_plural = "Черные списки"
+
+    def clean(self):
+        """Валидация блокировки себя."""
+        if self.user == self.blocked_user:
+            raise ValidationError("Пользователь не может блокировать себя.")
+
+    def save(self, *args, **kwargs):
+        """Кастомный save."""
+        self.full_clean()
+        return super().save(*args, **kwargs)
