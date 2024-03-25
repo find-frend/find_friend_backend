@@ -30,8 +30,6 @@ services:
       sh -c  "export DJANGO_SETTINGS_MODULE=config.settings &&
               daphne config.asgi:application -b 0.0.0.0 -p 8001 --access-log -"
     restart: always
-    volumes:
-      - .:/app/
     expose:
       - 8001
     depends_on:
