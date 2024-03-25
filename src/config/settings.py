@@ -18,6 +18,8 @@ ALLOWED_HOSTS = (
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
 
+ESSENTIAL_APPS = ("daphne",)
+
 DJANGO_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
@@ -30,6 +32,7 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
+    "channels",
     "djoser",
     "django_rest_passwordreset",
     "drf_yasg",
@@ -38,12 +41,13 @@ THIRD_PARTY_APPS = (
 )
 
 LOCAL_APPS = (
-    "api",
-    "users",
-    "events",
+    "api.apps.ApiConfig",
+    "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
+    "chat.apps.ChatConfig",
 )
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -103,11 +107,18 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
-        }
+        },
+        "daphne": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+ASGI_APPLICATION = "config.asgi.application"
 
 
 if DEBUG:
@@ -174,6 +185,7 @@ DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = BASE_DIR / "tmp/emails"
+    DEFAULT_FROM_EMAIL = "local@example.com"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = "smtp.yandex.ru"
@@ -183,7 +195,10 @@ else:
 
     EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    SERVER_EMAIL = EMAIL_HOST_USER
+    EMAIL_ADMIN = EMAIL_HOST_USER
 
 LANGUAGE_CODE = "ru"
 
@@ -213,13 +228,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-MIN_LENGTH_EMAIL = 5
-MAX_LENGTH_EMAIL = 254
-MIN_LENGTH_CHAR = 2
-MAX_LENGTH_CHAR = 150
-MAX_LENGTH_EVENT = 50
-MIN_LENGTH_PASSWORD = 8
-MAX_LENGTH_PASSWORD = 50
-MAX_LENGTH_DESCRIBE = 500
-MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
-MAX_FILE_SIZE_MB = 8
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                (
+                    "127.0.0.1" if DEBUG else os.getenv("REDIS_HOST", "redis"),
+                    os.getenv("REDIS_PORT", 6379),
+                )
+            ],
+        },
+    },
+}

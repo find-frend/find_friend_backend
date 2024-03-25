@@ -1,8 +1,9 @@
 from decimal import Decimal
 
 from django.db import models
+from django.utils import timezone
 
-from config.settings import MAX_LENGTH_EVENT
+from config.constants import MAX_LENGTH_EVENT
 from users.models import City, Interest, User
 
 
@@ -35,15 +36,21 @@ class Event(models.Model):
         default=Decimal("0.00"),
         verbose_name="Стоимость мероприятия",
     )
-    date = models.DateTimeField(
-        verbose_name="Дата мероприятия",
+    start_date = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Дата начала",
+    )
+    end_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Дата окончания",
     )
     city = models.ForeignKey(
         City,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        verbose_name="Место проведения мероприятия",
+        verbose_name="Место проведения",
     )
     image = models.ImageField(
         upload_to="images/events/",
@@ -51,11 +58,38 @@ class Event(models.Model):
         blank=True,
         null=True,
     )
+    min_age = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальный возраст участников",
+    )
+    max_age = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальный возраст участников",
+    )
+    min_count_members = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество участников",
+    )
+    max_count_members = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество участников",
+    )
 
     class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=models.F("start_date"))
+                | models.Q(end_date__isnull=True),
+                name="date_event_constraint",
+            ),
+        ]
         verbose_name = "Мероприятие"
         verbose_name_plural = "Мероприятия"
-        ordering = ("-date",)
+        ordering = ("-start_date",)
 
     def __str__(self):
         return self.name
