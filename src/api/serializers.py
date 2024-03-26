@@ -444,7 +444,6 @@ class BlacklistSerializer(MyUserSerializer):
         return data
 
 
-
 class NotificationSerializer(ModelSerializer):
 
     """Сериализатор уведомлений."""
@@ -452,6 +451,7 @@ class NotificationSerializer(ModelSerializer):
     class Meta:
         model = Notification
         fields = "__all__"
+
 
 class NotificationSettingsSerializer(ModelSerializer):
     """Сериализатор найстройки уведомлений."""
