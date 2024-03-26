@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
+<<<<<<< HEAD
 from notifications.models import Notification, NotificationSettings
 from users.models import Blacklist, City, FriendRequest, Interest, User
 
@@ -26,6 +27,19 @@ from .serializers import (CitySerializer, EventSerializer,
                           MyUserSerializer, NotificationSerializer,
                           NotificationSettingsSerializer)
 from .services import FriendRequestService
+=======
+from notifications.models import Notification
+from users.models import Friend, Profile, User
+
+from .pagination import MyPagination
+from .serializers import (
+    EventSerializer,
+    FriendSerializer,
+    MyUserSerializer,
+    NotificationSerializer,
+    ProfileSerializer,
+)
+>>>>>>> 1edccd26d7e53a5992647fad3a6ed69f3e53cced
 
 
 class MyUserViewSet(UserViewSet):
@@ -257,6 +271,7 @@ class EventViewSet(ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+<<<<<<< HEAD
     filter_backends = (
         # EventSearchFilter,
         filters.SearchFilter,

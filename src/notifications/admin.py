@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+
 from .models import Notification, NotificationSettings
 
 
@@ -13,3 +14,4 @@ class Notification(admin.ModelAdmin):
 class NotificationSettings(admin.ModelAdmin):
     """Админка для модели NotificationSettings."""
     list_display = ("user", "receive_notifications",)
+
