@@ -12,12 +12,12 @@ services:
     command: gunicorn config.wsgi:application --bind 0:8000 --access-logfile - --error-logfile -
     restart: always
     volumes:
+      - logs:/app/src/logs
       - static_value:/app/static/
       - media_value:/app/media/
     expose:
       - 8000
     depends_on:
-      - db
       - redis
     env_file:
       - ../../.env
@@ -32,11 +32,10 @@ services:
               daphne config.asgi:application -b 0.0.0.0 -p 8001 --access-log -"
     restart: always
     volumes:
-      - .:/app/
+      - logs:/app/src/logs
     expose:
       - 8001
     depends_on:
-      - db
       - redis
     env_file:
       - ../../.env
@@ -64,6 +63,6 @@ networks:
     external: true
 
 volumes:
-  db_data:
+  logs:
   static_value:
   media_value:
