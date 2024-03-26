@@ -92,9 +92,11 @@ TEMPLATES = [
 ]
 
 CUSTOM_LOGGER_NAME = os.getenv("CUSTOM_LOGGER_NAME", "find_friends")
-DEFAULT_LOG_LEVEL = os.getenv(
-    "DEBUG_LOG_LEVEL" if DEBUG else "PROD_LOG_LEVEL", "INFO"
-)
+
+if DEBUG:
+    DEFAULT_LOG_LEVEL = os.getenv("DEBUG_LOG_LEVEL", "INFO")
+else:
+    DEFAULT_LOG_LEVEL = os.getenv("PROD_LOG_LEVEL", "WARNING")
 
 LOGGING = {
     "version": 1,
