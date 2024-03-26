@@ -2,11 +2,9 @@ from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email as django_validate_email
 from django.db.models import Q
-from djoser.serializers import (
-    TokenCreateSerializer,
-    UserCreateSerializer,
-    UserSerializer,
-)
+
+from djoser.serializers import (TokenCreateSerializer, UserCreateSerializer,
+                                UserSerializer)
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
@@ -15,15 +13,9 @@ from rest_framework.serializers import ModelSerializer, SlugRelatedField
 from config import settings
 from config.constants import messages
 from events.models import Event, EventMember
-from users.models import (
-    Blacklist,
-    City,
-    FriendRequest,
-    Friendship,
-    Interest,
-    User,
-    UserInterest,
-)
+from notifications.models import Notification, NotificationSettings
+from users.models import (Blacklist, City, FriendRequest, Friendship, Interest,
+                          User, UserInterest)
 from users.validators import validate_email, validate_password
 
 
@@ -272,7 +264,7 @@ class MyUserGetSerializer(UserSerializer):
 class FriendRequestSerializer(serializers.ModelSerializer):
     """Сериализатор для модели FriendRequest.
 
-    Обрабатывает входные и выходные данные API заявок на дружбу.
+    обрабатывает входные и выходные данные API заявок на дружбу.
     """
 
     class Meta:
@@ -298,7 +290,6 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         return data
 
 
-
 class GetMembersField(serializers.RelatedField):
     """Сериализатор списка участников мероприятия."""
 
@@ -306,8 +297,9 @@ class GetMembersField(serializers.RelatedField):
         """Представление списка участников мероприятия."""
         return {"id": value.pk}
 
+
 class EventSerializer(ModelSerializer):
-    """Сериализатор мероприятия пользователя."""
+    """Сериализатор мероприятия."""
 
     # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
@@ -322,11 +314,16 @@ class EventSerializer(ModelSerializer):
             # "interests",
             "members",
             "event_type",
-            "date",
+            "start_date",
+            "end_date",
             "city",
             "event_price",
             "image",
             "members_count",
+            "min_age",
+            "max_age",
+            "min_count_members",
+            "max_count_members",
         )
 
     '''
@@ -405,6 +402,14 @@ class EventSerializer(ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class MyEventSerializer(ModelSerializer):
+    """Сериализатор списка мероприятий пользователя."""
+
+    class Meta:
+        model = Event
+        fields = ("id", "name")
+
+
 class CitySerializer(ModelSerializer):
     """Сериализатор городов."""
 
@@ -437,3 +442,18 @@ class BlacklistSerializer(MyUserSerializer):
                 code=status.HTTP_400_BAD_REQUEST,
             )
         return data
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Сериализатор уведомлений."""
+
+    class Meta:
+        model = Notification
+        fields = "__all__"
+
+
+class NotificationSettingsSerializer(serializers.ModelSerializer):
+    """Сериализатор найстройки уведомлений."""
+    class Meta:
+        model = NotificationSettings
+        fields = '__all__'
