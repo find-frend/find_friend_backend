@@ -62,7 +62,7 @@ jobs:
     # После тестирования необходимо поменять на main
     if: github.ref_name == 'main'
     steps:
-      - name: Run bot in docker
+      - name: Copy config to host
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -94,8 +94,16 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo DB_HOST=${{ secrets.REDIS_HOST }} >> .env
             echo DB_HOST=${{ secrets.REDIS_PORT }} >> .env
-            cd infra/prod/
-            docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
-            docker exec prod-backend-1 python manage.py makemigrations
-            docker exec prod-backend-1 python manage.py migrate
-            docker exec prod-backend-1 python manage.py collectstatic --no-input
+      - name: Run container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+              cd /home/${{ secrets.USER }}/infra/prod/
+              docker-compose -f ./docker-compose.prod.yaml config --quiet && printf "OK\n" || printf "ERROR\n" && exit 1
+              docker compose -f ./docker-compose.prod.yaml up -d --build --force-recreate
+              docker exec prod-backend-1 python manage.py makemigrations
+              docker exec prod-backend-1 python manage.py migrate
+              docker exec prod-backend-1 python manage.py collectstatic --no-input
