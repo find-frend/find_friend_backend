@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from drf_yasg import openapi
@@ -11,25 +12,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
+from notifications.models import Notification, NotificationSettings
 from users.models import Blacklist, City, FriendRequest, Interest, User
-
 
 from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
-from .permissions import (
-    IsAdminOrAuthorOrReadOnly,
-    IsAdminOrAuthorOrReadOnlyAndNotBlocked,
-    IsRecipient,
-)
+from .permissions import (IsAdminOrAuthorOrReadOnly,
+                          IsAdminOrAuthorOrReadOnlyAndNotBlocked, IsRecipient)
 from .serializers import BlacklistSerializer  # MyUserGetSerializer,
-from .serializers import (
-    CitySerializer,
-    EventSerializer,
-    FriendRequestSerializer,
-    InterestSerializer,
-    MyUserCreateSerializer,
-    MyUserSerializer,
-)
+from .serializers import (CitySerializer, EventSerializer,
+                          FriendRequestSerializer, InterestSerializer,
+                          MyEventSerializer, MyUserCreateSerializer,
+                          MyUserSerializer, NotificationSerializer,
+                          NotificationSettingsSerializer)
 from .services import FriendRequestService
 
 
@@ -119,6 +114,20 @@ class MyUserViewSet(UserViewSet):
             id=self.request.user.id
         )
         serializer = MyUserSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my_events",
+        permission_classes=(IsAuthenticated,),
+    )
+    def my_events(self, request):
+        """Вывод мероприятий текущего пользователя."""
+        queryset = Event.objects.filter(event__user=self.request.user)
+        serializer = MyEventSerializer(
             queryset, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -244,7 +253,7 @@ class FriendRequestViewSet(ModelViewSet):
 
 
 class EventViewSet(ModelViewSet):
-    """Вьюсет мероприятия пользователя."""
+    """Отображение мероприятий."""
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -257,7 +266,6 @@ class EventViewSet(ModelViewSet):
     search_fields = [
         "name",
         "event_type",
-        "date",
         "city__name",
     ]
     pagination_class = EventPagination
@@ -321,3 +329,33 @@ class CityViewSet(ReadOnlyModelViewSet):
         "name",
     ]
     pagination_class = None
+
+
+class NotificationViewSet(ModelViewSet):
+    """Вьюсет уведомлений пользователя."""
+
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        """Получает список уведомлений текущего пользователя."""
+        user = self.request.user
+        return Notification.objects.filter(recipient=user).select_related(
+            "recipient").order_by('-created_at')
+
+    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    def update_notification_settings(self, request):
+        """Обновляет настройки уведомлений текущего пользователя."""
+        user = request.user
+        try:
+            settings = NotificationSettings.objects.get(user=user)
+            serializer = NotificationSettingsSerializer(
+                instance=settings, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        except NotificationSettings.DoesNotExist:
+            return Response(
+                {"error": "Настройки уведомлений не найдены."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
