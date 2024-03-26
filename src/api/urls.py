@@ -10,6 +10,7 @@ from .views import (
     FriendRequestViewSet,
     InterestViewSet,
     MyUserViewSet,
+    NotificationViewSet,
 )
 
 app_name = "api"
@@ -23,6 +24,7 @@ router.register("events", EventViewSet, basename="events")
 router.register("interests", InterestViewSet, basename="interests")
 router.register("cities", CityViewSet, basename="cities")
 router.register(r"friends", FriendRequestViewSet, basename="friends")
+router.register(r"notification", NotificationViewSet, basename="notification")
 
 
 urlpatterns = [
