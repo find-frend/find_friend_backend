@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
+from notifications.models import Notification, NotificationSettings
 from users.models import Blacklist, City, FriendRequest, Interest, User
 
 from .filters import EventsFilter, UserFilter
@@ -29,6 +30,8 @@ from .serializers import (
     MyEventSerializer,
     MyUserCreateSerializer,
     MyUserSerializer,
+    NotificationSerializer,
+    NotificationSettingsSerializer,
 )
 from .services import FriendRequestService
 
@@ -334,3 +337,33 @@ class CityViewSet(ReadOnlyModelViewSet):
         "name",
     ]
     pagination_class = None
+
+
+class NotificationViewSet(ModelViewSet):
+    """Вьюсет уведомлений пользователя."""
+
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        """Получает список уведомлений текущего пользователя."""
+        user = self.request.user
+        return Notification.objects.filter(recipient=user).select_related(
+            "recipient").order_by('-created_at')
+
+    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    def update_notification_settings(self, request):
+        """Обновляет настройки уведомлений текущего пользователя."""
+        user = request.user
+        try:
+            settings = NotificationSettings.objects.get(user=user)
+            serializer = NotificationSettingsSerializer(
+                instance=settings, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        except NotificationSettings.DoesNotExist:
+            return Response(
+                {"error": "Настройки уведомлений не найдены."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
