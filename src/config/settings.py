@@ -89,12 +89,30 @@ TEMPLATES = [
     },
 ]
 
+# Logging
+
 CUSTOM_LOGGER_NAME = os.getenv("CUSTOM_LOGGER_NAME", "find_friends")
 
 if DEBUG:
     DEFAULT_LOG_LEVEL = os.getenv("DEBUG_LOG_LEVEL", "INFO")
 else:
     DEFAULT_LOG_LEVEL = os.getenv("PROD_LOG_LEVEL", "WARNING")
+
+LOGGER_SETTINGS = {
+    "handlers": ["console_handler", "file_handler"],
+    "level": DEFAULT_LOG_LEVEL,
+}
+
+ENABLED_LOGGERS = (
+    "",
+    "django",
+    "gunicorn.access",
+    "gunicorn.error",
+    "daphne",
+    CUSTOM_LOGGER_NAME,
+)
+
+LOGGERS_DICT = {key: LOGGER_SETTINGS for key in ENABLED_LOGGERS}
 
 LOGGING = {
     "version": 1,
@@ -107,8 +125,7 @@ LOGGING = {
     "formatters": {
         "default": {
             "format": (
-                "[{name_upper}] {levelname} {asctime} {name} "
-                "{module}.{funcName}:{lineno:d} {message}"
+                "[{name_upper}] {levelname} {asctime} {name} | {message}"
             ),
             "style": "{",
         },
@@ -141,27 +158,7 @@ LOGGING = {
             "maxBytes": int(os.getenv("LOG_FILE_SIZE", 1024 * 1024 * 10)),
         },
     },
-    "loggers": {
-        "": {
-            "handlers": ["console_handler"],
-            "level": DEFAULT_LOG_LEVEL,
-        },
-        "django": {
-            "handlers": ["console_handler", "file_handler"],
-            "level": DEFAULT_LOG_LEVEL,
-            "propagate": False,
-        },
-        "daphne": {
-            "handlers": ["console_handler", "file_handler"],
-            "level": DEFAULT_LOG_LEVEL,
-            "propagate": False,
-        },
-        CUSTOM_LOGGER_NAME: {
-            "handlers": ["console_handler", "file_handler"],
-            "level": DEFAULT_LOG_LEVEL,
-            "propagate": False,
-        },
-    },
+    "loggers": LOGGERS_DICT,
 }
 
 
