@@ -15,16 +15,16 @@ from django.utils.translation import gettext_lazy as _
 from django_rest_passwordreset.signals import reset_password_token_created
 from PIL import Image
 
-from config.constants import messages
-from config.settings import (
-    DEFAULT_FROM_EMAIL,
+from config.constants import (
     MAX_FILE_SIZE,
     MAX_FILE_SIZE_MB,
     MAX_LENGTH_CHAR,
     MAX_LENGTH_DESCRIBE,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_EVENT,
+    messages,
 )
+from config.settings import DEFAULT_FROM_EMAIL
 
 from .exceptions import ImageResizeError, ImageSizeError
 

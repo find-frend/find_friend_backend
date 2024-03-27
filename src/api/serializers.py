@@ -12,8 +12,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
+from config import constants
 from config.constants import messages
 from events.models import Event, EventMember
+from notifications.models import Notification, NotificationSettings
 from users.models import (
     Blacklist,
     City,
@@ -255,7 +257,7 @@ class MyUserGetSerializer(UserSerializer):
 class FriendRequestSerializer(serializers.ModelSerializer):
     """Сериализатор для модели FriendRequest.
 
-    Обрабатывает входные и выходные данные API заявок на дружбу.
+    обрабатывает входные и выходные данные API заявок на дружбу.
     """
 
     class Meta:
@@ -290,7 +292,7 @@ class GetMembersField(serializers.RelatedField):
 
 
 class EventSerializer(ModelSerializer):
-    """Сериализатор мероприятия пользователя."""
+    """Сериализатор мероприятия."""
 
     # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
@@ -305,12 +307,17 @@ class EventSerializer(ModelSerializer):
             # "interests",
             "members",
             "event_type",
-            "date",
+            "start_date",
+            "end_date",
             "city",
             "address",
             "event_price",
             "image",
             "members_count",
+            "min_age",
+            "max_age",
+            "min_count_members",
+            "max_count_members",
         )
 
     '''
@@ -396,6 +403,14 @@ class EventSerializer(ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class MyEventSerializer(ModelSerializer):
+    """Сериализатор списка мероприятий пользователя."""
+
+    class Meta:
+        model = Event
+        fields = ("id", "name")
+
+
 class CitySerializer(ModelSerializer):
     """Сериализатор городов."""
 
@@ -428,3 +443,19 @@ class BlacklistSerializer(MyUserSerializer):
                 code=status.HTTP_400_BAD_REQUEST,
             )
         return data
+
+
+class NotificationSerializer(ModelSerializer):
+
+    """Сериализатор уведомлений."""
+
+    class Meta:
+        model = Notification
+        fields = "__all__"
+
+
+class NotificationSettingsSerializer(ModelSerializer):
+    """Сериализатор найстройки уведомлений."""
+    class Meta:
+        model = NotificationSettings
+        fields = '__all__'

@@ -51,7 +51,7 @@ class UserFilter(filters.FilterSet):
 
 
 class OrganizerNameFilter(django_filters.Filter):
-    """Класс фильтрации для мероприятий."""
+    """Класс фильтрации мероприятий по организатору."""
 
     def filter(self, queryset, value):
         """Метод фильтрации мероприятий по имени/фамилии организатора."""
@@ -66,11 +66,82 @@ class OrganizerNameFilter(django_filters.Filter):
         return queryset
 
 
+class EventDateFilter(django_filters.Filter):
+    """Класс фильтрации мероприятий по дате."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации в интервале дат start_date и end_date."""
+        if value:
+            return queryset.filter(
+                Q(start_date__date__lte=value)
+                & (Q(end_date__date__gte=value) | Q(end_date__isnull=True))
+            )
+        return queryset
+
+
+class MinAgeFilter(django_filters.Filter):
+    """Класс фильтрации мероприятий по минимальному возрасту."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации по минимальному возрасту."""
+        if value:
+            return queryset.filter(
+                ~(Q(max_age__lte=value) & Q(max_age__isnull=False))
+            )
+        return queryset
+
+
+class MaxAgeFilter(django_filters.Filter):
+    """Класс фильтрации мероприятий по максимальному возрасту."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации по максимальному возрасту."""
+        if value:
+            return queryset.filter(
+                ~(Q(min_age__gte=value) & Q(min_age__isnull=False))
+            )
+        return queryset
+
+
+class MinCountMemberFilter(django_filters.Filter):
+    """Класс фильтрации мероприятий по минимальному количеству участников."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации по минимальному количеству."""
+        if value:
+            return queryset.filter(
+                ~(
+                    Q(max_count_members__lte=value)
+                    & Q(max_count_members__isnull=False)
+                )
+            )
+        return queryset
+
+
+class MaxCountMemberFilter(django_filters.Filter):
+    """Класс фильтрации мероприятий по максимальному количеству участников."""
+
+    def filter(self, queryset, value):
+        """Метод фильтрации по максимальному количеству."""
+        if value:
+            return queryset.filter(
+                ~(
+                    Q(min_count_members__gte=value)
+                    & Q(min_count_members__isnull=False)
+                )
+            )
+        return queryset
+
+
 class EventsFilter(filters.FilterSet):
     """Класс фильтрации мероприятий."""
 
     organizer = OrganizerNameFilter()
-
+    date = EventDateFilter()
+    min_age = MinAgeFilter()
+    max_age = MaxAgeFilter()
+    min_count = MinCountMemberFilter()
+    max_count = MaxCountMemberFilter()
     # interests = filters.AllValuesMultipleFilter(field_name="interests__name")
 
     class Meta:
@@ -82,6 +153,10 @@ class EventsFilter(filters.FilterSet):
             "city__name",
             "address",
             "organizer",
+            "min_age",
+            "max_age",
+            "min_count",
+            "max_count",
         ]
 
 

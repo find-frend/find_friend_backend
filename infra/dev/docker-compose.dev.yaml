@@ -10,16 +10,43 @@ services:
     env_file:
       - ../../.env
 
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - '6379:6379'
+
   backend:
     build: ../../.
+    command: gunicorn config.wsgi:application --bind 0:8000 --access-logfile - --error-logfile -
     restart: always
     volumes:
+      - logs:/app/logs
       - static_value:/app/static/
       - media_value:/app/media/
+    expose:
+      - 8000
     depends_on:
       - db
+      - redis
     env_file:
       - ../../.env
+
+  asgiserver:
+    build: ../../.
+    command: >
+      sh -c  "export DJANGO_SETTINGS_MODULE=config.settings &&
+              daphne config.asgi:application -b 0.0.0.0 -p 8001 --access-log -"
+    restart: always
+    volumes:
+      - logs:/app/logs
+    expose:
+      - 8001
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ../../.env
+
 
   nginx:
     image: nginx:1.25.3-alpine
@@ -31,8 +58,10 @@ services:
       - media_value:/var/html/media/
     depends_on:
       - backend
+      - asgiserver
 
 volumes:
   db_data:
+  logs:
   static_value:
   media_value:

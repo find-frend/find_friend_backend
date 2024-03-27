@@ -31,15 +31,21 @@ class EventAdmin(admin.ModelAdmin):
         "preview",
         "description",
         "event_type",
-        "date",
+        "start_date",
+        "end_date",
         "city",
         "address",
         "event_price",
+        "members_count",
+        "min_age",
+        "max_age",
+        "min_count_members",
+        "max_count_members",
     )
     list_filter = (CityEventFilter,)
     # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
-    search_fields = ["name", "event_type", "date", "city__name", "address"]
+    search_fields = ["name", "event_type", "start_date", "city__name", "address"]
     readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")
@@ -56,7 +62,7 @@ class EventAdmin(admin.ModelAdmin):
 
     @admin.display(description="Просмотр фото", empty_value="Нет фото")
     def preview(self, object):
-        """Отображается фото мерприятия."""
+        """Отображается фото мероприятия."""
         if object.image:
             print(True)
             return mark_safe(
@@ -64,6 +70,11 @@ class EventAdmin(admin.ModelAdmin):
                 'style="max-height: 100px; max-width: 100px">'
             )
         return None
+
+    @admin.display(description="Число участников")
+    def members_count(self, object):
+        """Отображение числа участников."""
+        return object.members_count()
 
 
 @admin.register(EventMember)

@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR.parent / ".env"
 
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
 load_dotenv(ENV_FILE)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -17,6 +20,8 @@ ALLOWED_HOSTS = (
     if DEBUG
     else os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 )
+
+ESSENTIAL_APPS = ("daphne",)
 
 DJANGO_APPS = (
     "django.contrib.admin",
@@ -30,6 +35,7 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework.authtoken",
     "rest_framework",
+    "channels",
     "djoser",
     "django_rest_passwordreset",
     "drf_yasg",
@@ -38,12 +44,14 @@ THIRD_PARTY_APPS = (
 )
 
 LOCAL_APPS = (
-    "api",
-    "users",
-    "events",
+    "api.apps.ApiConfig",
+    "users.apps.UsersConfig",
+    "events.apps.EventsConfig",
+    "chat.apps.ChatConfig",
+    "notifications.apps.NotificationsConfig",
 )
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -82,32 +90,82 @@ TEMPLATES = [
     },
 ]
 
+# Logging
+
+CUSTOM_LOGGER_NAME = os.getenv("CUSTOM_LOGGER_NAME", "find_friends")
+
+if DEBUG:
+    DEFAULT_LOG_LEVEL = os.getenv("DEBUG_LOG_LEVEL", "INFO")
+else:
+    DEFAULT_LOG_LEVEL = os.getenv("PROD_LOG_LEVEL", "WARNING")
+
+LOGGER_SETTINGS = {
+    "handlers": ["console_handler", "file_handler"],
+    "level": DEFAULT_LOG_LEVEL,
+}
+
+ENABLED_LOGGERS = (
+    "",
+    "django",
+    "gunicorn.access",
+    "gunicorn.error",
+    "daphne",
+    CUSTOM_LOGGER_NAME,
+)
+
+LOGGERS_DICT = {key: LOGGER_SETTINGS for key in ENABLED_LOGGERS}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "name_upper": {
+            "()": "config.logging.NameUpperFilter",
+        },
+    },
     "formatters": {
         "default": {
-            "format": "[DJANGO] %(levelname)s %(asctime)s %(module)s "
-            "%(name)s.%(funcName)s:%(lineno)s: %(message)s"
+            "format": (
+                "[{name_upper}] {levelname} {asctime} {name} | {message}"
+            ),
+            "style": "{",
+        },
+        "verbose": {
+            "format": (
+                "[{name_upper}] {levelname} {asctime} | Thread / Process: "
+                "{threadName} {thread:d} {process:d} | Logger: {name} "
+                "File: {filename} Module/function/line: "
+                "{module}.{funcName}:{lineno:d} | {message}"
+            ),
+            "style": "{",
         },
     },
     "handlers": {
-        "console": {
+        "console_handler": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
+            "filters": ["name_upper"],
             "formatter": "default",
-        }
+        },
+        "file_handler": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filters": ["name_upper"],
+            "filename": f"{LOG_DIR}/{CUSTOM_LOGGER_NAME}.log",
+            "mode": "a",
+            "encoding": "utf-8",
+            "formatter": "verbose",
+            "backupCount": int(os.getenv("LOG_FILES_TO_KEEP", 5)),
+            "maxBytes": int(os.getenv("LOG_FILE_SIZE", 1024 * 1024 * 10)),
+        },
     },
-    "loggers": {
-        "": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        }
-    },
+    "loggers": LOGGERS_DICT,
 }
 
+
 WSGI_APPLICATION = "config.wsgi.application"
+
+ASGI_APPLICATION = "config.asgi.application"
 
 
 if DEBUG:
@@ -221,15 +279,18 @@ REST_FRAMEWORK = {
     ],
 }
 
-MIN_LENGTH_EMAIL = 5
-MAX_LENGTH_EMAIL = 254
-MIN_LENGTH_CHAR = 2
-MAX_LENGTH_CHAR = 150
-MAX_LENGTH_EVENT = 50
-MIN_LENGTH_PASSWORD = 8
-MAX_LENGTH_PASSWORD = 50
-MAX_LENGTH_DESCRIBE = 500
-MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
-MAX_FILE_SIZE_MB = 8
-
 MAX_DISTANCE = 500
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                (
+                    "127.0.0.1" if DEBUG else os.getenv("REDIS_HOST", "redis"),
+                    os.getenv("REDIS_PORT", 6379),
+                )
+            ],
+        },
+    },
+}
