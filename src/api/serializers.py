@@ -15,6 +15,7 @@ from rest_framework.serializers import ModelSerializer, SlugRelatedField
 from config import constants
 from config.constants import messages
 from events.models import Event, EventMember
+from notifications.models import Notification, NotificationSettings
 from users.models import (
     Blacklist,
     City,
@@ -450,3 +451,19 @@ class BlacklistSerializer(MyUserSerializer):
                 code=status.HTTP_400_BAD_REQUEST,
             )
         return data
+
+
+class NotificationSerializer(ModelSerializer):
+
+    """Сериализатор уведомлений."""
+
+    class Meta:
+        model = Notification
+        fields = "__all__"
+
+
+class NotificationSettingsSerializer(ModelSerializer):
+    """Сериализатор найстройки уведомлений."""
+    class Meta:
+        model = NotificationSettings
+        fields = '__all__'
