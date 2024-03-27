@@ -48,6 +48,7 @@ LOCAL_APPS = (
     "users.apps.UsersConfig",
     "events.apps.EventsConfig",
     "chat.apps.ChatConfig",
+    "notifications.apps.NotificationsConfig",
 )
 
 INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
