@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 
-from config.constants import MAX_LENGTH_EVENT
+from config.constants import MAX_LENGTH_CHAR, MAX_LENGTH_EVENT
 from users.models import City, Interest, User
 
 
@@ -51,6 +51,13 @@ class Event(models.Model):
         blank=True,
         null=True,
         verbose_name="Место проведения",
+    )
+    address = models.CharField(
+        max_length=MAX_LENGTH_CHAR,
+        verbose_name="Улица, дом",
+        help_text="Введите тип и название улицы, номер дома",
+        blank=True,
+        null=True,
     )
     image = models.ImageField(
         upload_to="images/events/",
@@ -133,3 +140,24 @@ class EventMember(models.Model):
                 name="unique_member",
             )
         ]
+
+
+class EventLocation(models.Model):
+    """Модель хранения геолокации мероприятий."""
+
+    event = models.OneToOneField(
+        Event, on_delete=models.CASCADE, verbose_name="Мероприятие"
+    )
+    lon = models.DecimalField(
+        verbose_name="Долгота", max_digits=9, decimal_places=6
+    )
+    lat = models.DecimalField(
+        verbose_name="Широта", max_digits=9, decimal_places=6
+    )
+
+    class Meta:
+        verbose_name = "Геолокация мероприятия"
+        verbose_name_plural = "Геолокация мероприятий"
+
+    def __str__(self):
+        return f"{self.event} {self.lat}:{self.lon}"

@@ -6,7 +6,15 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-from .models import Blacklist, City, FriendRequest, Friendship, Interest, User
+from .models import (
+    Blacklist,
+    City,
+    FriendRequest,
+    Friendship,
+    Interest,
+    User,
+    UserLocation,
+)
 
 
 @admin.register(City)
@@ -135,6 +143,7 @@ class MyUserAdmin(UserAdmin):
         "purpose",
         "network_nick",
         "additionally",
+        "is_geoip_allowed",
         "avatar",
     )
     fieldsets = (
@@ -248,4 +257,19 @@ class BlacklistAdmin(admin.ModelAdmin):
         "user__last_name",
         "blocked_user__first_name",
         "blocked_user__last_name",
+    )
+
+
+@admin.register(UserLocation)
+class UserLocationAdmin(admin.ModelAdmin):
+    """Админка для модели UserLocation."""
+
+    list_display = (
+        "user",
+        "lat",
+        "lon",
+    )
+    search_fields = (
+        "user__first_name",
+        "user__last_name",
     )

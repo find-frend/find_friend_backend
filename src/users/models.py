@@ -197,6 +197,11 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_DESCRIBE,
         blank=True,
     )
+    is_geoip_allowed = models.BooleanField(
+        default=False,
+        help_text="Разрешено или нет определение геолокации",
+        verbose_name="Разрешение поиска геолокации",
+    )
     """
     nickname = models.SlugField(
         "Ник пользователя",
@@ -511,3 +516,24 @@ class Blacklist(models.Model):
         """Кастомный save."""
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class UserLocation(models.Model):
+    """Модель хранения геолокации пользователей."""
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
+    lon = models.DecimalField(
+        verbose_name="Долгота", max_digits=9, decimal_places=6
+    )
+    lat = models.DecimalField(
+        verbose_name="Широта", max_digits=9, decimal_places=6
+    )
+
+    class Meta:
+        verbose_name = "Геолокация пользователя"
+        verbose_name_plural = "Геолокация пользователя"
+
+    def __str__(self):
+        return f"{self.user} {self.lat}:{self.lon}"
