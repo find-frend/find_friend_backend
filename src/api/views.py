@@ -1,7 +1,9 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.serializers import TokenSerializer
+from djoser.utils import ActionViewMixin
+from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
@@ -170,6 +172,52 @@ class MyUserViewSet(UserViewSet):
             pages, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
+
+
+class CustomActionViewMixin(ActionViewMixin):
+    """Миксин для метода post в action во вьюсете.
+
+    Это переопределенный миксин из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    @swagger_auto_schema(
+        responses={
+            200: TokenSerializer,
+        }
+    )
+    def post(self, *args, **kwargs):
+        """Метод post для action во вьюсете."""
+        return super().post(*args, **kwargs)
+
+
+class CustomTokenCreateView(CustomActionViewMixin, TokenCreateView):
+    """Вьюсет для получения токена аутентификации пользователя.
+
+    Это переопределенный вьюсет из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    pass
+
+
+class CustomTokenDestroyView(TokenDestroyView):
+    """Вьюсет для удаления токена аутентификации пользователя (логаут).
+
+    Это переопределенный вьюсет из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Response(
+                description="No Content",
+            ),
+        },
+    )
+    def post(self, *args, **kwargs):
+        """Метод post."""
+        return super().post(*args, **kwargs)
 
 
 class FriendRequestViewSet(ModelViewSet):
