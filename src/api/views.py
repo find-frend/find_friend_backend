@@ -14,7 +14,8 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from events.models import Event
 from notifications.models import Notification, NotificationSettings
-from users.models import Blacklist, City, FriendRequest, Interest, User
+from users.models import (Blacklist, City, FriendRequest,
+                          Interest, User, Friendship)
 
 from .filters import EventsFilter, UserFilter
 from .pagination import EventPagination, MyPagination
@@ -120,11 +121,15 @@ class MyUserViewSet(UserViewSet):
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        queryset = User.objects.filter(sent_requests__is_added=True).exclude(
-            id=self.request.user.id
-        )
+        friendships = Friendship.objects.filter(initiator=self.request.user) | Friendship.objects.filter(friend=self.request.user)
+        friends = []
+        for friendship in friendships:
+            if friendship.initiator == self.request.user:
+                friends.append(friendship.friend)
+            else:
+                friends.append(friendship.initiator)
         serializer = MyUserSerializer(
-            queryset, many=True, context={"request": request}
+            friends, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
