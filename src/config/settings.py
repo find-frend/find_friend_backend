@@ -206,6 +206,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+GEOIP_PATH = os.path.join(BASE_DIR, "data/geoip")
+GEOIP_COUNTRY = "GeoLite2-Country.mmdb"
+GEOIP_CITY = "GeoLite2-City.mmdb"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -227,3 +231,5 @@ MAX_LENGTH_PASSWORD = 50
 MAX_LENGTH_DESCRIBE = 500
 MAX_FILE_SIZE = 8 * 1024 * 1024  # 8388608
 MAX_FILE_SIZE_MB = 8
+
+MAX_DISTANCE = 500

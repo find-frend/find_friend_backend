@@ -12,7 +12,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
-from config import settings
 from config.constants import messages
 from events.models import Event, EventMember
 from users.models import (
@@ -25,6 +24,8 @@ from users.models import (
     UserInterest,
 )
 from users.validators import validate_email, validate_password
+
+from .geo import save_event_location
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
@@ -121,25 +122,6 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
         required=False,
         allow_null=True,
     )
-    email = serializers.EmailField(
-        max_length=settings.MAX_LENGTH_EMAIL,
-        min_length=settings.MIN_LENGTH_EMAIL,
-        allow_blank=False,
-        required=False,
-        read_only=True,
-    )
-    first_name = serializers.CharField(
-        max_length=settings.MAX_LENGTH_CHAR,
-        min_length=settings.MIN_LENGTH_CHAR,
-        allow_blank=False,
-        required=False,
-    )
-    last_name = serializers.CharField(
-        max_length=settings.MAX_LENGTH_CHAR,
-        min_length=settings.MIN_LENGTH_CHAR,
-        allow_blank=False,
-        required=False,
-    )
     interests = InterestSerializer(many=True, required=False)
     friends = GetFriendsField(read_only=True, many=True, required=False)
     age = serializers.IntegerField(required=False)
@@ -166,6 +148,7 @@ class MyUserSerializer(UserSerializer, MyUserBaseSerializer):
             "purpose",
             "network_nick",
             "additionally",
+            "is_geoip_allowed",
             "is_blocked",
         )
 
@@ -298,13 +281,13 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         return data
 
 
-
 class GetMembersField(serializers.RelatedField):
     """Сериализатор списка участников мероприятия."""
 
     def to_representation(self, value):
         """Представление списка участников мероприятия."""
         return {"id": value.pk}
+
 
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия пользователя."""
@@ -324,6 +307,7 @@ class EventSerializer(ModelSerializer):
             "event_type",
             "date",
             "city",
+            "address",
             "event_price",
             "image",
             "members_count",
@@ -359,10 +343,15 @@ class EventSerializer(ModelSerializer):
     def create(self, validated_data):
         """Создание мероприятия с указанными участниками."""
         if "members" not in self.initial_data:
-            return Event.objects.create(**validated_data)
+            event = Event.objects.create(**validated_data)
+            if "city" in self.initial_data or "address" in self.initial_data:
+                save_event_location(event, validated_data)
+            return event
         # members = validated_data.pop("members")
         members = self.initial_data.pop("members")
         event = Event.objects.create(**validated_data)
+        if "city" in self.initial_data or "address" in self.initial_data:
+            save_event_location(event, validated_data)
         is_organizers = []
         for member in members:
             members_list = EventMember.objects.filter(
@@ -381,6 +370,8 @@ class EventSerializer(ModelSerializer):
 
     def update(self, instance, validated_data):
         """Обновление мероприятия с указанными участниками."""
+        if "city" in self.initial_data or "address" in self.initial_data:
+            save_event_location(instance, validated_data)
         if "members" not in self.initial_data:
             return super().update(instance, validated_data)
         # members = validated_data.pop("members")

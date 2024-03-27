@@ -75,7 +75,14 @@ class EventsFilter(filters.FilterSet):
 
     class Meta:
         model = Event
-        fields = ["event_type", "date", "city", "city__name", "organizer"]
+        fields = [
+            "event_type",
+            "date",
+            "city",
+            "city__name",
+            "address",
+            "organizer",
+        ]
 
 
 '''
