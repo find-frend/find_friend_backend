@@ -116,7 +116,7 @@ class MyUserViewSet(UserViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path="myfriends",
+        url_path="my_friends",
         permission_classes=(IsAuthenticated,),
     )
     def my_friends(self, request):
