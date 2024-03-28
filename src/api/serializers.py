@@ -82,7 +82,7 @@ class GetFriendsField(serializers.RelatedField):
             "first_name": value.first_name,
             "last_name": value.last_name,
             "age": value.age(),
-            "city": value.city.name,
+            # "city": value.city.name,
         }
 
 

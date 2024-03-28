@@ -23,6 +23,7 @@ from users.models import (
     Interest,
     User,
     UserLocation,
+    Friendship
 )
 from .filters import EventsFilter, UserFilter
 from .geo import (
@@ -133,16 +134,20 @@ class MyUserViewSet(UserViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path="myfriends",
+        url_path="my_friends",
         permission_classes=(IsAuthenticated,),
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        queryset = User.objects.filter(sent_requests__is_added=True).exclude(
-            id=self.request.user.id
-        )
+        friendships = Friendship.objects.filter(initiator=self.request.user) | Friendship.objects.filter(friend=self.request.user)
+        friends = []
+        for friendship in friendships:
+            if friendship.initiator == self.request.user:
+                friends.append(friendship.friend)
+            else:
+                friends.append(friendship.initiator)
         serializer = MyUserSerializer(
-            queryset, many=True, context={"request": request}
+            friends, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
