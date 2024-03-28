@@ -151,6 +151,7 @@ class EventsFilter(filters.FilterSet):
             "date",
             "city",
             "city__name",
+            "address",
             "organizer",
             "min_age",
             "max_age",

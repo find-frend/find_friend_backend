@@ -4,7 +4,7 @@ from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Event, EventMember
+from .models import Event, EventLocation, EventMember
 
 
 class CityEventFilter(AutocompleteFilter):
@@ -34,6 +34,7 @@ class EventAdmin(admin.ModelAdmin):
         "start_date",
         "end_date",
         "city",
+        "address",
         "event_price",
         "members_count",
         "min_age",
@@ -44,7 +45,7 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = (CityEventFilter,)
     # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
-    search_fields = ["name", "event_type", "start_date", "city__name"]
+    search_fields = ["name", "event_type", "start_date", "city__name", "address"]
     readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")
@@ -85,3 +86,15 @@ class EventMemberAdmin(admin.ModelAdmin):
         "user",
         "is_organizer",
     )
+
+
+@admin.register(EventLocation)
+class EventLocationAdmin(admin.ModelAdmin):
+    """Админка для модели EventLocation."""
+
+    list_display = (
+        "event",
+        "lat",
+        "lon",
+    )
+    search_fields = ("event__name",)
