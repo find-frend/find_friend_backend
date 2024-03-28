@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.serializers import TokenSerializer
@@ -12,12 +13,26 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from events.models import Event
+from config import settings
+from events.models import Event, EventLocation
 from notifications.models import Notification, NotificationSettings
-from users.models import (Blacklist, City, FriendRequest,
-                          Interest, User, Friendship)
-
+from users.models import (
+    Blacklist,
+    City,
+    FriendRequest,
+    Interest,
+    User,
+    UserLocation,
+    Friendship
+)
 from .filters import EventsFilter, UserFilter
+from .geo import (
+    get_event_distance,
+    get_event_location,
+    get_user_distance,
+    get_user_location,
+    save_user_location,
+)
 from .pagination import EventPagination, MyPagination
 from .permissions import (
     IsAdminOrAuthorOrReadOnly,
@@ -62,6 +77,9 @@ class MyUserViewSet(UserViewSet):
         """Выбор сериализатора."""
         # if self.request.method == "GET":
         #    return MyUserGetSerializer
+
+        # Сохранение геолокации текущего пользователя
+        save_user_location(self.request.user)
         if self.request.method == "POST":
             return MyUserCreateSerializer
         return MyUserSerializer
@@ -180,6 +198,52 @@ class MyUserViewSet(UserViewSet):
             pages, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def geolocation(self, request, **kwargs):
+        """Получение геолокации пользователя."""
+        user_id = self.kwargs.get("id")
+        user = get_object_or_404(User, id=user_id)
+        data = get_user_location(user)
+        if data:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Геолокация пользователя {user} не найдена."
+        return HttpResponse(message, status=404)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def distance(self, request, **kwargs):
+        """Получение расстояния до пользователя от текущего пользователя."""
+        user_id = self.kwargs.get("id")
+        user = get_object_or_404(User, id=user_id)
+        data = get_user_distance(request.user, user)
+        if data is not None:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Расстояние до пользователя {user} не найдено."
+        return HttpResponse(message, status=404)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def distances(self, request):
+        """Получение расстояния до пользователей от текущего пользователя."""
+        locations = UserLocation.objects.all().exclude(user=self.request.user)
+        data = []
+        if self.request.query_params and self.request.query_params["search"]:
+            max_distance = int(self.request.query_params["search"])
+        else:
+            max_distance = settings.MAX_DISTANCE
+        for location in locations:
+            distance = get_user_distance(
+                self.request.user, location.user, (location.lat, location.lon)
+            )
+            if distance and distance["distance"] <= max_distance:
+                data.append(
+                    {
+                        "user": location.user.id,
+                        "first_name": location.user.first_name,
+                        "last_name": location.user.last_name,
+                        "distance": distance["distance"],
+                    }
+                )
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class CustomActionViewMixin(ActionViewMixin):
@@ -328,6 +392,7 @@ class EventViewSet(ModelViewSet):
         "name",
         "event_type",
         "city__name",
+        "address",
     ]
     pagination_class = EventPagination
     permission_classes = [
@@ -365,6 +430,51 @@ class EventViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Создание мероприятия."""
         return super().create(request, *args, **kwargs)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def geolocation(self, request, **kwargs):
+        """Получение геолокации мероприятия."""
+        event_id = self.kwargs.get("pk")
+        event = get_object_or_404(Event, id=event_id)
+        data = get_event_location(event)
+        if data:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Геолокация мероприятия {event} не найдена."
+        return HttpResponse(message, status=404)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def distance(self, request, **kwargs):
+        """Получение расстояния до мероприятия от текущего пользователя."""
+        event_id = self.kwargs.get("pk")
+        event = get_object_or_404(Event, id=event_id)
+        data = get_event_distance(request.user, event)
+        if data is not None:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Расстояние до мероприятия {event} не найдено."
+        return HttpResponse(message, status=404)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def distances(self, request):
+        """Получение расстояния до мероприятий от текущего пользователя."""
+        locations = EventLocation.objects.all()
+        data = []
+        if self.request.query_params and self.request.query_params["search"]:
+            max_distance = int(self.request.query_params["search"])
+        else:
+            max_distance = settings.MAX_DISTANCE
+        for location in locations:
+            distance = get_event_distance(
+                self.request.user, location.event, (location.lat, location.lon)
+            )
+            if distance and distance["distance"] <= max_distance:
+                data.append(
+                    {
+                        "event": location.event.id,
+                        "name": location.event.name,
+                        "distance": distance["distance"],
+                    }
+                )
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class InterestViewSet(ReadOnlyModelViewSet):
