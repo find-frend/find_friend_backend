@@ -161,3 +161,59 @@ class EventLocation(models.Model):
 
     def __str__(self):
         return f"{self.event} {self.lat}:{self.lon}"
+
+
+class EventRequest(models.Model):
+    """Модель заявки на участие в мероприятии."""
+
+    STATUS_CHOICES = (
+        ("Pending", "В ожидании"),
+        ("Accepted", "Принято"),
+        ("Declined", "Отклонено"),
+    )
+    from_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="sent_event_requests",
+        verbose_name="Инициатор",
+    )
+    to_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="received_event_requests",
+        verbose_name="Организатор",
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="event_request",
+        verbose_name="Мероприятие",
+    )
+    status = models.CharField(
+        max_length=MAX_LENGTH_CHAR,
+        choices=STATUS_CHOICES,
+        default="Pending",
+        verbose_name="Статус",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Создано"
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "from_user",
+                    "event",
+                ],
+                name="unique_event_member",
+            )
+        ]
+
+        ordering = ["-created_at"]
+        verbose_name = "Заявка на мероприятие"
+        verbose_name_plural = "Заявки на мероприятия"
+
+    def __str__(self):
+        return f"{self.from_user}: {self.event.name}"
