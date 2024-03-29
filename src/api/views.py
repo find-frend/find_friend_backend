@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from config import settings
-from events.models import Event, EventLocation
+from events.models import Event, EventLocation, ParticipationRequest
 from notifications.models import Notification, NotificationSettings
 from users.models import (
     Blacklist,
@@ -24,6 +24,7 @@ from users.models import (
     User,
     UserLocation,
 )
+
 from .filters import EventsFilter, UserFilter
 from .geo import (
     get_event_distance,
@@ -49,8 +50,9 @@ from .serializers import (
     MyUserSerializer,
     NotificationSerializer,
     NotificationSettingsSerializer,
+    ParticipationSerializer,
 )
-from .services import FriendRequestService
+from .services import FriendRequestService, ParticipationRequestService
 
 
 class MyUserViewSet(UserViewSet):
@@ -472,6 +474,58 @@ class EventViewSet(ModelViewSet):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class ParticipationViewSet(ModelViewSet):
+    """ViewSet для управления заявками на участие в мероприятии."""
+
+    serializer_class = ParticipationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Возвращает queryset заявок на участие в мероприятии."""
+        return ParticipationRequest.objects.select_related("from_user").filter(
+            from_user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        """Переопределяет метод создания объекта.
+
+        автоматически назначая отправителя заявки текущим пользователем.
+        """
+        serializer.save(from_user=self.request.user)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="accept",
+        permission_classes=[IsAuthenticated],
+    )
+    def accept_request(self, request, pk=None):
+        """Обрабатывает принятие заявки на мероприятие."""
+        ParticipationRequestService.accept_event_participation(
+            pk, request.user
+        )
+        return Response(
+            {"message": "Заявка на участие в мероприятии принята."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="decline",
+        permission_classes=[IsAuthenticated],
+    )
+    def decline_request(self, request, pk=None):
+        """Обрабатывает отклонение заявки на мероприятие."""
+        ParticipationRequestService.decline_event_participation(
+            pk, request.user
+        )
+        return Response(
+            {"message": "Заявка на участие в мероприятии отклонена."},
+            status=status.HTTP_200_OK,
+        )
+
+
 class InterestViewSet(ReadOnlyModelViewSet):
     """Отображение интересов."""
 
@@ -505,10 +559,13 @@ class NotificationViewSet(ModelViewSet):
     def get_queryset(self):
         """Получает список уведомлений текущего пользователя."""
         user = self.request.user
-        return Notification.objects.filter(recipient=user).select_related(
-            "recipient").order_by('-created_at')
+        return (
+            Notification.objects.filter(recipient=user)
+            .select_related("recipient")
+            .order_by("-created_at")
+        )
 
-    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    @action(detail=False, methods=["patch"], url_path="notification_settings")
     def update_notification_settings(self, request):
         """Обновляет настройки уведомлений текущего пользователя."""
         user = request.user

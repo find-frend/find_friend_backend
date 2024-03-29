@@ -163,7 +163,7 @@ class EventLocation(models.Model):
         return f"{self.event} {self.lat}:{self.lon}"
 
 
-class EventRequest(models.Model):
+class ParticipationRequest(models.Model):
     """Модель заявки на участие в мероприятии."""
 
     STATUS_CHOICES = (
@@ -174,19 +174,13 @@ class EventRequest(models.Model):
     from_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="sent_event_requests",
+        related_name="sent_participation",
         verbose_name="Инициатор",
-    )
-    to_user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="received_event_requests",
-        verbose_name="Организатор",
     )
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
-        related_name="event_request",
+        related_name="participation",
         verbose_name="Мероприятие",
     )
     status = models.CharField(
@@ -194,6 +188,14 @@ class EventRequest(models.Model):
         choices=STATUS_CHOICES,
         default="Pending",
         verbose_name="Статус",
+    )
+    processed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="received_participation",
+        verbose_name="Кем обработано",
     )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Создано"
@@ -207,7 +209,7 @@ class EventRequest(models.Model):
                     "from_user",
                     "event",
                 ],
-                name="unique_event_member",
+                name="unique_event_participation",
             )
         ]
 

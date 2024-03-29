@@ -4,7 +4,7 @@ from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Event, EventLocation, EventMember, EventRequest
+from .models import Event, EventLocation, EventMember, ParticipationRequest
 
 
 class CityEventFilter(AutocompleteFilter):
@@ -106,13 +106,13 @@ class EventLocationAdmin(admin.ModelAdmin):
     search_fields = ("event__name",)
 
 
-@admin.register(EventRequest)
-class EventRequestAdmin(admin.ModelAdmin):
-    """Админка для модели EventRequest."""
+@admin.register(ParticipationRequest)
+class ParticipationRequestAdmin(admin.ModelAdmin):
+    """Админка для модели ParticipationRequest."""
 
     list_display = (
         "from_user",
-        "to_user",
+        "processed_by",
         "event",
         "status",
         "created_at",
