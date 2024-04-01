@@ -6,10 +6,11 @@ from users.models import User
 
 class Notification(models.Model):
     """Модель Уведомлений."""
+
     NOTIFICATION_CHOICES = (
-        ('FRIEND_REQUEST', 'Запрос в друзья'),
+        ("FRIEND_REQUEST", "Запрос в друзья"),
         ("FRIEND_REQUEST_ACCEPTED", "Запрос в друзья принят"),
-        ("FRIEND_REQUEST_REJECTED", "Запрос в друзья отклонен")
+        ("FRIEND_REQUEST_REJECTED", "Запрос в друзья отклонен"),
         # можно добавить мероприятия
     )
     recipient = models.ForeignKey(
@@ -19,7 +20,9 @@ class Notification(models.Model):
     message = models.TextField(max_length=MAX_LENGTH_TEXT)
     type = models.CharField(
         max_length=MAX_LENGTH_CHAR,
-        choices=NOTIFICATION_CHOICES, null=True, blank=True
+        choices=NOTIFICATION_CHOICES,
+        null=True,
+        blank=True,
     )
     read = models.BooleanField(default=False)
 
@@ -28,12 +31,15 @@ class Notification(models.Model):
         verbose_name_plural = "Уведомления"
 
     def __str__(self):
-        return (f"Уведомления пользователя "
-                f"{self.recipient.first_name}: {self.message}")
+        return (
+            f"Уведомления пользователя "
+            f"{self.recipient.first_name}: {self.message}"
+        )
 
 
 class NotificationSettings(models.Model):
     """Модель для настройки уведомлений."""
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="notification_settings"
     )
