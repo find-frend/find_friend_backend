@@ -117,6 +117,7 @@ class ParticipationRequestAdmin(admin.ModelAdmin):
         "status",
         "created_at",
         "updated_at",
+        "id",
     )
     search_fields = ("event__name", "status")
     list_filter = ("status", "created_at", "updated_at")

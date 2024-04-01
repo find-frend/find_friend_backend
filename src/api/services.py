@@ -19,7 +19,7 @@ def handle_not_found(func):
         try:
             return func(*args, **kwargs)
         except ObjectDoesNotExist:
-            raise Http404("Заявка на дружбу не найдена.")
+            raise Http404("Заявка не найдена.")
 
     return wrapper
 

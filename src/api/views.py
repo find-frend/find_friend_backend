@@ -37,6 +37,7 @@ from .pagination import EventPagination, MyPagination
 from .permissions import (
     IsAdminOrAuthorOrReadOnly,
     IsAdminOrAuthorOrReadOnlyAndNotBlocked,
+    IsEventOrganizer,
     IsRecipient,
 )
 from .serializers import BlacklistSerializer  # MyUserGetSerializer,
@@ -478,7 +479,9 @@ class ParticipationViewSet(ModelViewSet):
     """ViewSet для управления заявками на участие в мероприятии."""
 
     serializer_class = ParticipationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get_queryset(self):
         """Возвращает queryset заявок на участие в мероприятии."""
@@ -497,7 +500,9 @@ class ParticipationViewSet(ModelViewSet):
         detail=True,
         methods=["post"],
         url_path="accept",
-        permission_classes=[IsAuthenticated],
+        permission_classes=[
+            IsEventOrganizer,
+        ],
     )
     def accept_request(self, request, pk=None):
         """Обрабатывает принятие заявки на мероприятие."""
@@ -513,7 +518,7 @@ class ParticipationViewSet(ModelViewSet):
         detail=True,
         methods=["post"],
         url_path="decline",
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsEventOrganizer],
     )
     def decline_request(self, request, pk=None):
         """Обрабатывает отклонение заявки на мероприятие."""
