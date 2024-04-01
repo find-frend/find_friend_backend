@@ -12,7 +12,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-from config import settings
+# from config import settings
 from events.models import EventLocation
 from users.models import UserLocation
 
@@ -23,11 +23,11 @@ URL_YANDEX_MAPS = "https://yandex.ru/maps"
 def get_geo_event(city, address):
     """Получение геолокации по Яндекс.Картам."""
     # Время ожидания
-    delay = 30
+    delay = 3
     # Подключение драйвера Google
     options = Options()
-    if not settings.DEBUG:
-        options.add_argument("--headless")
+    # if not settings.DEBUG:
+    options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     # Переход на сайт
     driver.get(URL_YANDEX_MAPS)
@@ -51,36 +51,11 @@ def get_geo_event(city, address):
                 )
             )
         )
-        # elem_search.click()
         # Возврат координат адреса
-        driver.quit()
         if elem_search.text:
             return list(map(float, elem_search.text.split(", ")))
     except TimeoutException:
-        """
-        try:
-            elem_first_list = WebDriverWait(driver, delay).until(
-                ec.presence_of_element_located(
-                    (By.XPATH,
-                     "//div[@class='search-snippet-view__body _type_toponym']")
-                     ))
-            elem_first_list.click()
-            # Возврат координат адреса
-            if elem_first_list.text:
-                return list(map(float, elem_first_list.text.split(", ")))
-        except ObjectDoesNotExist:
-            try:
-                elem_clear = WebDriverWait(driver, 2).until(
-                    ec.presence_of_element_located(
-                        (By.XPATH, "//a[@class='small-search-form-view__pin']")
-                        ))
-            except ObjectDoesNotExist:
-                elem_clear = WebDriverWait(driver, 2).until(
-                    ec.presence_of_element_located(
-                        (By.XPATH,
-                "//div[@class='small-search-form-view__icon _type_close']")))
-        """
-        driver.quit()
+        pass
     return None
 
 
