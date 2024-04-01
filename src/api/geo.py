@@ -12,7 +12,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-# from config import settings
 from events.models import EventLocation
 from users.models import UserLocation
 
@@ -26,7 +25,6 @@ def get_geo_event(city, address):
     delay = 3
     # Подключение драйвера Google
     options = Options()
-    # if not settings.DEBUG:
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     # Переход на сайт

@@ -24,6 +24,7 @@ from users.models import (
     User,
     UserLocation,
 )
+
 from .filters import EventsFilter, UserFilter
 from .geo import (
     get_event_distance,
@@ -74,9 +75,6 @@ class MyUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
-        # if self.request.method == "GET":
-        #    return MyUserGetSerializer
-
         # Сохранение геолокации текущего пользователя
         save_user_location(self.request.user)
         if self.request.method == "POST":
@@ -505,10 +503,13 @@ class NotificationViewSet(ModelViewSet):
     def get_queryset(self):
         """Получает список уведомлений текущего пользователя."""
         user = self.request.user
-        return Notification.objects.filter(recipient=user).select_related(
-            "recipient").order_by('-created_at')
+        return (
+            Notification.objects.filter(recipient=user)
+            .select_related("recipient")
+            .order_by("-created_at")
+        )
 
-    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    @action(detail=False, methods=["patch"], url_path="notification_settings")
     def update_notification_settings(self, request):
         """Обновляет настройки уведомлений текущего пользователя."""
         user = request.user
