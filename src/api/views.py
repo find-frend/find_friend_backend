@@ -20,10 +20,10 @@ from users.models import (
     Blacklist,
     City,
     FriendRequest,
+    Friendship,
     Interest,
     User,
     UserLocation,
-    Friendship
 )
 
 from .filters import EventsFilter, UserFilter
@@ -40,8 +40,8 @@ from .permissions import (
     IsAdminOrAuthorOrReadOnlyAndNotBlocked,
     IsRecipient,
 )
-from .serializers import BlacklistSerializer  # MyUserGetSerializer,
 from .serializers import (
+    BlacklistSerializer,
     CitySerializer,
     EventSerializer,
     FriendRequestSerializer,
@@ -137,7 +137,9 @@ class MyUserViewSet(UserViewSet):
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        friendships = Friendship.objects.filter(initiator=self.request.user) | Friendship.objects.filter(friend=self.request.user)
+        friendships = Friendship.objects.filter(
+            initiator=self.request.user
+        ) | Friendship.objects.filter(friend=self.request.user)
         friends = []
         for friendship in friendships:
             if friendship.initiator == self.request.user:
@@ -381,7 +383,6 @@ class EventViewSet(ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     filter_backends = (
-        # EventSearchFilter,
         filters.SearchFilter,
         DjangoFilterBackend,
     )

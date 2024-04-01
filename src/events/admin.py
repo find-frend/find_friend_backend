@@ -43,9 +43,14 @@ class EventAdmin(admin.ModelAdmin):
         "max_count_members",
     )
     list_filter = (CityEventFilter,)
-    # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
-    search_fields = ["name", "event_type", "start_date", "city__name", "address"]
+    search_fields = [
+        "name",
+        "event_type",
+        "start_date",
+        "city__name",
+        "address",
+    ]
     readonly_fields = ["preview"]
 
     @admin.display(description="Интересы")
