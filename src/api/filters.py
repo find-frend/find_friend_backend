@@ -70,14 +70,6 @@ class OrganizerNameFilter(django_filters.Filter):
 class EventDateFilter(django_filters.Filter):
     """Класс фильтрации мероприятий по дате."""
 
-    # def filter(self, queryset, value):
-    #     """Метод фильтрации в интервале дат start_date и end_date."""
-    #     if value:
-    #         return queryset.filter(
-    #             Q(start_date__date__lte=value)
-    #             & (Q(end_date__date__gte=value) | Q(end_date__isnull=True))
-    #         )
-    #     return queryset
     def filter(self, queryset, value):
         """Метод фильтрации в интервале дат start_date и end_date."""
         try:
