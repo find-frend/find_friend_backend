@@ -1,7 +1,10 @@
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.serializers import TokenSerializer
+from djoser.utils import ActionViewMixin
+from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
@@ -10,10 +13,26 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from events.models import Event
-from users.models import Blacklist, City, FriendRequest, Interest, User
-
+from config import settings
+from events.models import Event, EventLocation
+from notifications.models import Notification, NotificationSettings
+from users.models import (
+    Blacklist,
+    City,
+    FriendRequest,
+    Interest,
+    User,
+    UserLocation,
+    Friendship
+)
 from .filters import EventsFilter, UserFilter
+from .geo import (
+    get_event_distance,
+    get_event_location,
+    get_user_distance,
+    get_user_location,
+    save_user_location,
+)
 from .pagination import EventPagination, MyPagination
 from .permissions import (
     IsAdminOrAuthorOrReadOnly,
@@ -29,6 +48,8 @@ from .serializers import (
     MyEventSerializer,
     MyUserCreateSerializer,
     MyUserSerializer,
+    NotificationSerializer,
+    NotificationSettingsSerializer,
 )
 from .services import FriendRequestService
 
@@ -56,6 +77,9 @@ class MyUserViewSet(UserViewSet):
         """Выбор сериализатора."""
         # if self.request.method == "GET":
         #    return MyUserGetSerializer
+
+        # Сохранение геолокации текущего пользователя
+        save_user_location(self.request.user)
         if self.request.method == "POST":
             return MyUserCreateSerializer
         return MyUserSerializer
@@ -110,16 +134,20 @@ class MyUserViewSet(UserViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path="myfriends",
+        url_path="my_friends",
         permission_classes=(IsAuthenticated,),
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        queryset = User.objects.filter(sent_requests__is_added=True).exclude(
-            id=self.request.user.id
-        )
+        friendships = Friendship.objects.filter(initiator=self.request.user) | Friendship.objects.filter(friend=self.request.user)
+        friends = []
+        for friendship in friendships:
+            if friendship.initiator == self.request.user:
+                friends.append(friendship.friend)
+            else:
+                friends.append(friendship.initiator)
         serializer = MyUserSerializer(
-            queryset, many=True, context={"request": request}
+            friends, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -170,6 +198,98 @@ class MyUserViewSet(UserViewSet):
             pages, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def geolocation(self, request, **kwargs):
+        """Получение геолокации пользователя."""
+        user_id = self.kwargs.get("id")
+        user = get_object_or_404(User, id=user_id)
+        data = get_user_location(user)
+        if data:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Геолокация пользователя {user} не найдена."
+        return HttpResponse(message, status=404)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def distance(self, request, **kwargs):
+        """Получение расстояния до пользователя от текущего пользователя."""
+        user_id = self.kwargs.get("id")
+        user = get_object_or_404(User, id=user_id)
+        data = get_user_distance(request.user, user)
+        if data is not None:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Расстояние до пользователя {user} не найдено."
+        return HttpResponse(message, status=404)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def distances(self, request):
+        """Получение расстояния до пользователей от текущего пользователя."""
+        locations = UserLocation.objects.all().exclude(user=self.request.user)
+        data = []
+        if self.request.query_params and self.request.query_params["search"]:
+            max_distance = int(self.request.query_params["search"])
+        else:
+            max_distance = settings.MAX_DISTANCE
+        for location in locations:
+            distance = get_user_distance(
+                self.request.user, location.user, (location.lat, location.lon)
+            )
+            if distance and distance["distance"] <= max_distance:
+                data.append(
+                    {
+                        "user": location.user.id,
+                        "first_name": location.user.first_name,
+                        "last_name": location.user.last_name,
+                        "distance": distance["distance"],
+                    }
+                )
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class CustomActionViewMixin(ActionViewMixin):
+    """Миксин для метода post в action во вьюсете.
+
+    Это переопределенный миксин из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    @swagger_auto_schema(
+        responses={
+            200: TokenSerializer,
+        }
+    )
+    def post(self, *args, **kwargs):
+        """Метод post для action во вьюсете."""
+        return super().post(*args, **kwargs)
+
+
+class CustomTokenCreateView(CustomActionViewMixin, TokenCreateView):
+    """Вьюсет для получения токена аутентификации пользователя.
+
+    Это переопределенный вьюсет из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    pass
+
+
+class CustomTokenDestroyView(TokenDestroyView):
+    """Вьюсет для удаления токена аутентификации пользователя (логаут).
+
+    Это переопределенный вьюсет из djoser, он нужен для корректной
+    генерации документации swagger (yasg).
+    """
+
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Response(
+                description="No Content",
+            ),
+        },
+    )
+    def post(self, *args, **kwargs):
+        """Метод post."""
+        return super().post(*args, **kwargs)
 
 
 class FriendRequestViewSet(ModelViewSet):
@@ -272,6 +392,7 @@ class EventViewSet(ModelViewSet):
         "name",
         "event_type",
         "city__name",
+        "address",
     ]
     pagination_class = EventPagination
     permission_classes = [
@@ -310,6 +431,51 @@ class EventViewSet(ModelViewSet):
         """Создание мероприятия."""
         return super().create(request, *args, **kwargs)
 
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def geolocation(self, request, **kwargs):
+        """Получение геолокации мероприятия."""
+        event_id = self.kwargs.get("pk")
+        event = get_object_or_404(Event, id=event_id)
+        data = get_event_location(event)
+        if data:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Геолокация мероприятия {event} не найдена."
+        return HttpResponse(message, status=404)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def distance(self, request, **kwargs):
+        """Получение расстояния до мероприятия от текущего пользователя."""
+        event_id = self.kwargs.get("pk")
+        event = get_object_or_404(Event, id=event_id)
+        data = get_event_distance(request.user, event)
+        if data is not None:
+            return Response(data, status=status.HTTP_200_OK)
+        message = f"Расстояние до мероприятия {event} не найдено."
+        return HttpResponse(message, status=404)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def distances(self, request):
+        """Получение расстояния до мероприятий от текущего пользователя."""
+        locations = EventLocation.objects.all()
+        data = []
+        if self.request.query_params and self.request.query_params["search"]:
+            max_distance = int(self.request.query_params["search"])
+        else:
+            max_distance = settings.MAX_DISTANCE
+        for location in locations:
+            distance = get_event_distance(
+                self.request.user, location.event, (location.lat, location.lon)
+            )
+            if distance and distance["distance"] <= max_distance:
+                data.append(
+                    {
+                        "event": location.event.id,
+                        "name": location.event.name,
+                        "distance": distance["distance"],
+                    }
+                )
+        return Response(data, status=status.HTTP_200_OK)
+
 
 class InterestViewSet(ReadOnlyModelViewSet):
     """Отображение интересов."""
@@ -334,3 +500,33 @@ class CityViewSet(ReadOnlyModelViewSet):
         "name",
     ]
     pagination_class = None
+
+
+class NotificationViewSet(ModelViewSet):
+    """Вьюсет уведомлений пользователя."""
+
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        """Получает список уведомлений текущего пользователя."""
+        user = self.request.user
+        return Notification.objects.filter(recipient=user).select_related(
+            "recipient").order_by('-created_at')
+
+    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    def update_notification_settings(self, request):
+        """Обновляет настройки уведомлений текущего пользователя."""
+        user = request.user
+        try:
+            settings = NotificationSettings.objects.get(user=user)
+            serializer = NotificationSettingsSerializer(
+                instance=settings, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        except NotificationSettings.DoesNotExist:
+            return Response(
+                {"error": "Настройки уведомлений не найдены."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

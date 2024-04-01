@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR.parent / ".env"
 
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
 load_dotenv(ENV_FILE)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -45,6 +48,7 @@ LOCAL_APPS = (
     "users.apps.UsersConfig",
     "events.apps.EventsConfig",
     "chat.apps.ChatConfig",
+    "notifications.apps.NotificationsConfig",
 )
 
 INSTALLED_APPS = ESSENTIAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -86,35 +90,78 @@ TEMPLATES = [
     },
 ]
 
+# Logging
+
+CUSTOM_LOGGER_NAME = os.getenv("CUSTOM_LOGGER_NAME", "find_friends")
+
+if DEBUG:
+    DEFAULT_LOG_LEVEL = os.getenv("DEBUG_LOG_LEVEL", "INFO")
+else:
+    DEFAULT_LOG_LEVEL = os.getenv("PROD_LOG_LEVEL", "WARNING")
+
+LOGGER_SETTINGS = {
+    "handlers": ["console_handler", "file_handler"],
+    "level": DEFAULT_LOG_LEVEL,
+}
+
+ENABLED_LOGGERS = (
+    "",
+    "django",
+    "gunicorn.access",
+    "gunicorn.error",
+    "daphne",
+    CUSTOM_LOGGER_NAME,
+)
+
+LOGGERS_DICT = {key: LOGGER_SETTINGS for key in ENABLED_LOGGERS}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "name_upper": {
+            "()": "config.logging.NameUpperFilter",
+        },
+    },
     "formatters": {
         "default": {
-            "format": "[DJANGO] %(levelname)s %(asctime)s %(module)s "
-            "%(name)s.%(funcName)s:%(lineno)s: %(message)s"
+            "format": (
+                "[{name_upper}] {levelname} {asctime} {name} | {message}"
+            ),
+            "style": "{",
+        },
+        "verbose": {
+            "format": (
+                "[{name_upper}] {levelname} {asctime} | Thread / Process: "
+                "{threadName} {thread:d} {process:d} | Logger: {name} "
+                "File: {filename} Module/function/line: "
+                "{module}.{funcName}:{lineno:d} | {message}"
+            ),
+            "style": "{",
         },
     },
     "handlers": {
-        "console": {
+        "console_handler": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
+            "filters": ["name_upper"],
             "formatter": "default",
-        }
-    },
-    "loggers": {
-        "": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
         },
-        "daphne": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
+        "file_handler": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filters": ["name_upper"],
+            "filename": f"{LOG_DIR}/{CUSTOM_LOGGER_NAME}.log",
+            "mode": "a",
+            "encoding": "utf-8",
+            "formatter": "verbose",
+            "backupCount": int(os.getenv("LOG_FILES_TO_KEEP", 5)),
+            "maxBytes": int(os.getenv("LOG_FILE_SIZE", 1024 * 1024 * 10)),
         },
     },
+    "loggers": LOGGERS_DICT,
 }
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -217,6 +264,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+GEOIP_PATH = os.path.join(BASE_DIR, "data/geoip")
+GEOIP_COUNTRY = "GeoLite2-Country.mmdb"
+GEOIP_CITY = "GeoLite2-City.mmdb"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -227,6 +278,8 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+MAX_DISTANCE = 500
 
 CHANNEL_LAYERS = {
     "default": {

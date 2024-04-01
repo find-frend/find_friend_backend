@@ -12,6 +12,7 @@ services:
     command: gunicorn config.wsgi:application --bind 0:8000 --access-logfile - --error-logfile -
     restart: always
     volumes:
+      - logs:/app/logs
       - static_value:/app/static/
       - media_value:/app/media/
     expose:
@@ -30,6 +31,8 @@ services:
       sh -c  "export DJANGO_SETTINGS_MODULE=config.settings &&
               daphne config.asgi:application -b 0.0.0.0 -p 8001 --access-log -"
     restart: always
+    volumes:
+      - logs:/app/logs
     expose:
       - 8001
     depends_on:
@@ -60,5 +63,6 @@ networks:
     external: true
 
 volumes:
+  logs:
   static_value:
   media_value:
