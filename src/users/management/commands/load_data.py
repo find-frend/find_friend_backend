@@ -3,6 +3,7 @@
 from csv import DictReader
 
 from django.core.management import BaseCommand
+from django.db import connection
 from django.shortcuts import get_object_or_404
 
 from chat.models import Chat, Message
@@ -37,6 +38,16 @@ def change_foreign_keys(data_csv):
         if key in FIELDS.keys():
             change_data[key] = FIELDS[key].objects.get(pk=value)
     return change_data
+
+
+def reset_sequence(model):
+    """Сброс последовательности id в таблице базы данных."""
+    table_name = model._meta.db_table
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT setval('{table_name}_id_seq', "
+            f"(SELECT MAX(id) FROM {table_name}) + 1);"
+        )
 
 
 class Command(BaseCommand):
@@ -91,6 +102,11 @@ class Command(BaseCommand):
                 except Exception as error:
                     self.stderr.write(self.style.WARNING(f"{error}"))
                     raise Exception(error)
+            if (
+                connection.vendor == "postgresql"
+                and file_name != "user_interest.csv"
+            ):
+                reset_sequence(model_name)
             self.stdout.write(
                 self.style.SUCCESS(f"Successfully load {file_name}")
             )
