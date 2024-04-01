@@ -26,7 +26,7 @@ if FILENAME not in project_dir_content:
         "Убедитесь, что у вас верная структура проекта."
     )
 
-# pytest_plugins = [
-#     #'tests.fixtures.fixture_user',
-#     'tests.fixtures.fixture_data',
-# ]
+pytest_plugins = [
+    "tests.fixtures.fixture_user",
+    "tests.fixtures.fixture_data",
+]
