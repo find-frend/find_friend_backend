@@ -485,9 +485,7 @@ class ParticipationViewSet(ModelViewSet):
 
     def get_queryset(self):
         """Возвращает queryset заявок на участие в мероприятии."""
-        return ParticipationRequest.objects.select_related("from_user").filter(
-            from_user=self.request.user
-        )
+        return ParticipationRequest.objects.filter(from_user=self.request.user)
 
     def perform_create(self, serializer):
         """Переопределяет метод создания объекта.
@@ -529,6 +527,38 @@ class ParticipationViewSet(ModelViewSet):
             {"message": "Заявка на участие в мероприятии отклонена."},
             status=status.HTTP_200_OK,
         )
+
+    @swagger_auto_schema(
+        responses={
+            401: openapi.Response(
+                description="UnauthorizedAccess",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                },
+            ),
+        },
+    )
+    def list(self, request, *args, **kwargs):
+        """Получение списка заявок пользователя."""
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={
+            401: openapi.Response(
+                description="Unauthorized",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                },
+            ),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Добавление заявки на участие в мероприятии."""
+        return super().create(request, *args, **kwargs)
 
 
 class InterestViewSet(ReadOnlyModelViewSet):
