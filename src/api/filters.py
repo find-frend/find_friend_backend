@@ -177,14 +177,3 @@ class EventsFilter(filters.FilterSet):
                 event__user__in=friend_ids, event__is_organizer=True
             )
         return queryset
-
-
-'''
-class EventSearchFilter(SearchFilter):
-    """Класс поиска по названию мероприятия."""
-
-    def filter_queryset(self, request, queryset, view):
-        """Выборка по названию мероприятия."""
-        name = request.query_params.get("name", "")
-        return queryset.filter(name__startswith=name) if name else queryset
-'''
