@@ -20,6 +20,7 @@ from users.models import (
     Blacklist,
     City,
     FriendRequest,
+    Friendship,
     Interest,
     User,
     UserLocation,
@@ -40,8 +41,8 @@ from .permissions import (
     IsEventOrganizer,
     IsRecipient,
 )
-from .serializers import BlacklistSerializer  # MyUserGetSerializer,
 from .serializers import (
+    BlacklistSerializer,
     CitySerializer,
     EventSerializer,
     FriendRequestSerializer,
@@ -77,9 +78,6 @@ class MyUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
-        # if self.request.method == "GET":
-        #    return MyUserGetSerializer
-
         # Сохранение геолокации текущего пользователя
         save_user_location(self.request.user)
         if self.request.method == "POST":
@@ -136,16 +134,22 @@ class MyUserViewSet(UserViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path="myfriends",
+        url_path="my_friends",
         permission_classes=(IsAuthenticated,),
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        queryset = User.objects.filter(sent_requests__is_added=True).exclude(
-            id=self.request.user.id
-        )
+        friendships = Friendship.objects.filter(
+            initiator=self.request.user
+        ) | Friendship.objects.filter(friend=self.request.user)
+        friends = []
+        for friendship in friendships:
+            if friendship.initiator == self.request.user:
+                friends.append(friendship.friend)
+            else:
+                friends.append(friendship.initiator)
         serializer = MyUserSerializer(
-            queryset, many=True, context={"request": request}
+            friends, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -381,7 +385,6 @@ class EventViewSet(ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     filter_backends = (
-        # EventSearchFilter,
         filters.SearchFilter,
         DjangoFilterBackend,
     )

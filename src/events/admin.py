@@ -43,7 +43,6 @@ class EventAdmin(admin.ModelAdmin):
         "max_count_members",
     )
     list_filter = (CityEventFilter,)
-    # inlines = (InterestInlineAdmin, )
     inlines = (MemberInlineAdmin,)
     search_fields = (
         "name",

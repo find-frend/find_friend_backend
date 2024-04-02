@@ -81,7 +81,7 @@ class GetFriendsField(serializers.RelatedField):
             "first_name": value.first_name,
             "last_name": value.last_name,
             "age": value.age(),
-            "city": value.city.name,
+            # "city": value.city.name,
         }
 
 
@@ -293,7 +293,6 @@ class GetMembersField(serializers.RelatedField):
 class EventSerializer(ModelSerializer):
     """Сериализатор мероприятия."""
 
-    # interests = InterestSerializer(many=True)
     members = GetMembersField(read_only=True, many=True, required=False)
     members_count = serializers.IntegerField(required=False)
 
@@ -303,7 +302,6 @@ class EventSerializer(ModelSerializer):
             "id",
             "name",
             "description",
-            # "interests",
             "members",
             "event_type",
             "start_date",
@@ -319,33 +317,6 @@ class EventSerializer(ModelSerializer):
             "max_count_members",
         )
 
-    '''
-    def create(self, validated_data):
-        """Создание мероприятия с указанными интересами."""
-        if "interests" not in self.initial_data:
-            return Event.objects.create(**validated_data)
-        interests = validated_data.pop("interests")
-        event = Event.objects.create(**validated_data)
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            EventInterest.objects.create(
-                event=event, interest=current_interest
-            )
-        return event
-
-    def update(self, instance, validated_data):
-        """Обновление мероприятия с указанными интересами."""
-        if "interests" not in self.initial_data:
-            return super().update(instance, validated_data)
-        interests = validated_data.pop("interests")
-        for interest in interests:
-            current_interest = Interest.objects.get(**interest)
-            EventInterest.objects.create(
-                event=instance, interest=current_interest
-            )
-        return super().update(instance, validated_data)
-    '''
-
     def create(self, validated_data):
         """Создание мероприятия с указанными участниками."""
         if "members" not in self.initial_data:
@@ -353,7 +324,6 @@ class EventSerializer(ModelSerializer):
             if "city" in self.initial_data or "address" in self.initial_data:
                 save_event_location(event, validated_data)
             return event
-        # members = validated_data.pop("members")
         members = self.initial_data.pop("members")
         event = Event.objects.create(**validated_data)
         if "city" in self.initial_data or "address" in self.initial_data:
@@ -380,7 +350,6 @@ class EventSerializer(ModelSerializer):
             save_event_location(instance, validated_data)
         if "members" not in self.initial_data:
             return super().update(instance, validated_data)
-        # members = validated_data.pop("members")
         members = self.initial_data.pop("members")
         is_organizers = []
         for member in members:
