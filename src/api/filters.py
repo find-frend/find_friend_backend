@@ -5,10 +5,8 @@ from django.db.models import Q
 from django.utils import timezone
 from django_filters import rest_framework as filters
 
-from events.models import Event, EventMember
-from users.models import User, Friendship
-
-# from rest_framework.filters import SearchFilter
+from events.models import Event
+from users.models import Friendship, User
 
 
 class UserFilter(filters.FilterSet):
@@ -143,8 +141,7 @@ class EventsFilter(filters.FilterSet):
     min_count = MinCountMemberFilter()
     max_count = MaxCountMemberFilter()
     organizer_is_friend = django_filters.Filter(
-        method='filter_organizer_is_friend',
-        label='Организатор-друг'
+        method="filter_organizer_is_friend", label="Организатор-друг"
     )
     # interests = filters.AllValuesMultipleFilter(field_name="interests__name")
 
@@ -167,8 +164,8 @@ class EventsFilter(filters.FilterSet):
         """Метод фильтрации по друзьям-организаторам."""
         if value and self.request.user.is_authenticated:
             friendships = Friendship.objects.filter(
-                initiator=self.request.user) | Friendship.objects.filter(
-                    friend=self.request.user)
+                initiator=self.request.user
+            ) | Friendship.objects.filter(friend=self.request.user)
             friends = []
             for friendship in friendships:
                 if friendship.initiator == self.request.user:
@@ -177,18 +174,6 @@ class EventsFilter(filters.FilterSet):
                     friends.append(friendship.initiator)
             friend_ids = [friend.id for friend in friends]
             return Event.objects.filter(
-                event__user__in=friend_ids,
-                event__is_organizer=True
+                event__user__in=friend_ids, event__is_organizer=True
             )
         return queryset
-
-
-'''
-class EventSearchFilter(SearchFilter):
-    """Класс поиска по названию мероприятия."""
-
-    def filter_queryset(self, request, queryset, view):
-        """Выборка по названию мероприятия."""
-        name = request.query_params.get("name", "")
-        return queryset.filter(name__startswith=name) if name else queryset
-'''

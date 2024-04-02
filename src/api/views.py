@@ -20,11 +20,12 @@ from users.models import (
     Blacklist,
     City,
     FriendRequest,
+    Friendship,
     Interest,
     User,
     UserLocation,
-    Friendship
 )
+
 from .filters import EventsFilter, UserFilter
 from .geo import (
     get_event_distance,
@@ -39,8 +40,8 @@ from .permissions import (
     IsAdminOrAuthorOrReadOnlyAndNotBlocked,
     IsRecipient,
 )
-from .serializers import BlacklistSerializer  # MyUserGetSerializer,
 from .serializers import (
+    BlacklistSerializer,
     CitySerializer,
     EventSerializer,
     FriendRequestSerializer,
@@ -75,9 +76,6 @@ class MyUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
-        # if self.request.method == "GET":
-        #    return MyUserGetSerializer
-
         # Сохранение геолокации текущего пользователя
         save_user_location(self.request.user)
         if self.request.method == "POST":
@@ -139,7 +137,9 @@ class MyUserViewSet(UserViewSet):
     )
     def my_friends(self, request):
         """Вывод друзей текущего пользователя."""
-        friendships = Friendship.objects.filter(initiator=self.request.user) | Friendship.objects.filter(friend=self.request.user)
+        friendships = Friendship.objects.filter(
+            initiator=self.request.user
+        ) | Friendship.objects.filter(friend=self.request.user)
         friends = []
         for friendship in friendships:
             if friendship.initiator == self.request.user:
@@ -383,7 +383,6 @@ class EventViewSet(ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     filter_backends = (
-        # EventSearchFilter,
         filters.SearchFilter,
         DjangoFilterBackend,
     )
@@ -510,10 +509,13 @@ class NotificationViewSet(ModelViewSet):
     def get_queryset(self):
         """Получает список уведомлений текущего пользователя."""
         user = self.request.user
-        return Notification.objects.filter(recipient=user).select_related(
-            "recipient").order_by('-created_at')
+        return (
+            Notification.objects.filter(recipient=user)
+            .select_related("recipient")
+            .order_by("-created_at")
+        )
 
-    @action(detail=False, methods=['patch'], url_path="notification_settings")
+    @action(detail=False, methods=["patch"], url_path="notification_settings")
     def update_notification_settings(self, request):
         """Обновляет настройки уведомлений текущего пользователя."""
         user = request.user
