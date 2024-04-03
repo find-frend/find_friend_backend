@@ -6,8 +6,9 @@ from rest_framework.response import Response
 
 from chat.models import Chat
 from chat.serializers import ChatListSerializer, ChatSerializer
+from chat.utils import check_friendshhip, get_chat_and_permissions
 from config.constants import messages
-from users.models import Friendship, User
+from users.models import User
 
 
 @api_view(["POST"])
@@ -23,15 +24,7 @@ def start_chat(request):
         )
 
     # Проверяем, что пользователь, с которым мы начинаем чат, у нас в друзьях
-    if not (
-        Friendship.objects.filter(
-            Q(initiator=request.user, friend=participant)
-            | Q(initiator=participant, friend=request.user),
-        ).exists()
-    ):
-        raise exceptions.ValidationError(
-            detail=messages.USER_IS_NOT_FRIEND % str(participant)
-        )
+    check_friendshhip(request.user, participant)
 
     # Если чат между пользователями уже существует, переадресуем на него
     chat = Chat.objects.filter(
@@ -49,22 +42,7 @@ def start_chat(request):
 @api_view(["GET"])
 def get_chat(request, chat_id):
     """Просмотр чата."""
-    try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist:
-        raise exceptions.NotFound(detail=messages.CHAT_DOES_NOT_EXIST)
-
-    # Проверяем права доступа к чату
-    if not any(
-        (
-            request.user.is_staff,
-            request.user == chat.initiator,
-            request.user == chat.receiver,
-        )
-    ):
-        raise exceptions.PermissionDenied(
-            detail=messages.USER_NOT_ALLOWED_TO_VIEW_CHAT
-        )
+    chat = get_chat_and_permissions(request.user, chat_id)
     return Response(ChatSerializer(instance=chat).data)
 
 

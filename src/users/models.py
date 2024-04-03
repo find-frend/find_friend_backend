@@ -27,25 +27,7 @@ from config.constants import (
 from config.settings import DEFAULT_FROM_EMAIL
 
 from .exceptions import ImageResizeError, ImageSizeError
-
-# from .utils import make_thumbnail
 from .validators import validate_birthday
-
-# from typing import Collection
-
-
-class FriendRequestManager(models.Manager):
-    """Менеджер для модели FriendRequest.
-
-    предоставляющий методы для работы с заявками на дружбу.
-    """
-
-    def pending_requests(self, user):
-        """Возвращает queryset заявок на дружбу.
-
-        ожидающих ответа от указанного пользователя.
-        """
-        return self.get_queryset().filter(to_user=user, status="Pending")
 
 
 class City(models.Model):
@@ -62,6 +44,20 @@ class City(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class FriendRequestManager(models.Manager):
+    """Менеджер для модели FriendRequest.
+
+    предоставляющий методы для работы с заявками на дружбу.
+    """
+
+    def pending_requests(self, user):
+        """Возвращает queryset заявок на дружбу.
+
+        ожидающих ответа от указанного пользователя.
+        """
+        return self.get_queryset().filter(to_user=user, status="Pending")
 
 
 class CustomUserManager(BaseUserManager):
@@ -202,21 +198,6 @@ class User(AbstractUser):
         help_text="Разрешено или нет определение геолокации",
         verbose_name="Разрешение поиска геолокации",
     )
-    """
-    nickname = models.SlugField(
-        "Ник пользователя",
-        max_length=MAX_LENGTH_CHAR,
-        unique=True,
-        blank=True,
-        null=True,
-    )
-    liked_list = models.JSONField(blank=True, default=list)
-    character = models.CharField(
-        "Характер",
-        max_length=MAX_LENGTH_CHAR,
-        blank=True,
-    )
-    """
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 

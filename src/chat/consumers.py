@@ -5,16 +5,28 @@ from channels.generic.websocket import WebsocketConsumer
 
 from chat.models import Chat, Message
 from chat.serializers import MessageSerializer
+from chat.utils import check_friendshhip, get_chat_and_permissions
 from config.constants import MAX_MESSAGES_IN_CHAT
 
 
 class ChatConsumer(WebsocketConsumer):
     """Consumer для чатов."""
 
+    def _validate_user(self, user):
+        """Валидация пользователя."""
+        chat = get_chat_and_permissions(user, self.room_name)
+        other_user = chat.initiator if user == chat.receiver else chat.receiver
+        check_friendshhip(user, other_user)
+
     def connect(self):
         """Подключение к чату."""
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
+
+        try:
+            self._validate_user(self.scope["user"])
+        except Exception:
+            self.close()
 
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name, self.channel_name
