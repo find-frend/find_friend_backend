@@ -1,3 +1,8 @@
+from django.contrib.auth import password_validation as pv
+from django.core.exceptions import ValidationError
+from django.db.models.fields import Field as DjangoField
+from djoser.constants import Messages as DjoserMessages
+
 MIN_LENGTH_EMAIL = 5
 MAX_LENGTH_EMAIL = 254
 MIN_LENGTH_CHAR = 2
@@ -57,6 +62,28 @@ class Messages(object):
     USER_IS_NOT_FRIEND = (
         "Чтобы начать чат, вы должны быть в друзьях с пользователем %s."
     )
+
+    # Ниже получаем стандартные сообщения валидации Django и других пакетов
+    FIELD_CANNOT_BE_BLANK_MSG = DjangoField.default_error_messages["blank"]
+    INVALID_CREDENTIALS_MSG = DjoserMessages.INVALID_CREDENTIALS_ERROR
+
+    def _get_standard_message(self, validation_method, value):
+        try:
+            validation_method(value)
+        except ValidationError as e:
+            return e.message
+
+    @property
+    def password_numeric_msg(self):
+        """Сообщение Django при попытке использовать пароль только из цифр."""
+        obj = pv.NumericPasswordValidator()
+        return self._get_standard_message(obj.validate, "81672049")
+
+    @property
+    def password_common_msg(self):
+        """Сообщение Django при попытке ввести распространённый пароль."""
+        obj = pv.CommonPasswordValidator()
+        return self._get_standard_message(obj.validate, "qwerty123")
 
 
 messages = Messages()
