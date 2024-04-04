@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from config.constants import MAX_DISTANCE
-from events.models import Event, EventLocation
+from events.models import Event, EventLocation, ParticipationRequest
 from notifications.models import Notification, NotificationSettings
 from users.models import (
     Blacklist,
@@ -38,6 +38,7 @@ from .pagination import EventPagination, MyPagination
 from .permissions import (
     IsAdminOrAuthorOrReadOnly,
     IsAdminOrAuthorOrReadOnlyAndNotBlocked,
+    IsEventOrganizer,
     IsRecipient,
 )
 from .serializers import (
@@ -51,8 +52,9 @@ from .serializers import (
     MyUserSerializer,
     NotificationSerializer,
     NotificationSettingsSerializer,
+    ParticipationSerializer,
 )
-from .services import FriendRequestService
+from .services import FriendRequestService, ParticipationRequestService
 
 
 class MyUserViewSet(UserViewSet):
@@ -474,6 +476,92 @@ class EventViewSet(ModelViewSet):
                     }
                 )
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ParticipationViewSet(ModelViewSet):
+    """ViewSet для управления заявками на участие в мероприятии."""
+
+    serializer_class = ParticipationSerializer
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get_queryset(self):
+        """Возвращает queryset заявок на участие в мероприятии."""
+        return ParticipationRequest.objects.filter(from_user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Переопределяет метод создания объекта.
+
+        автоматически назначая отправителя заявки текущим пользователем.
+        """
+        serializer.save(from_user=self.request.user)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="accept",
+        permission_classes=[
+            IsEventOrganizer,
+        ],
+    )
+    def accept_request(self, request, pk=None):
+        """Обрабатывает принятие заявки на мероприятие."""
+        ParticipationRequestService.accept_event_participation(
+            pk, request.user
+        )
+        return Response(
+            {"message": "Заявка на участие в мероприятии принята."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="decline",
+        permission_classes=[IsEventOrganizer],
+    )
+    def decline_request(self, request, pk=None):
+        """Обрабатывает отклонение заявки на мероприятие."""
+        ParticipationRequestService.decline_event_participation(
+            pk, request.user
+        )
+        return Response(
+            {"message": "Заявка на участие в мероприятии отклонена."},
+            status=status.HTTP_200_OK,
+        )
+
+    @swagger_auto_schema(
+        responses={
+            401: openapi.Response(
+                description="UnauthorizedAccess",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                },
+            ),
+        },
+    )
+    def list(self, request, *args, **kwargs):
+        """Получение списка заявок пользователя."""
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={
+            401: openapi.Response(
+                description="Unauthorized",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                },
+            ),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Добавление заявки на участие в мероприятии."""
+        return super().create(request, *args, **kwargs)
 
 
 class InterestViewSet(ReadOnlyModelViewSet):

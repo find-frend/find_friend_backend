@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.http import Http404
 
+from events.models import EventMember, ParticipationRequest
 from users.models import FriendRequest, Friendship
 
 
@@ -18,7 +19,7 @@ def handle_not_found(func):
         try:
             return func(*args, **kwargs)
         except ObjectDoesNotExist:
-            raise Http404("Заявка на дружбу не найдена.")
+            raise Http404("Заявка не найдена.")
 
     return wrapper
 
@@ -53,3 +54,46 @@ class FriendRequestService:
         )
         friend_request.status = "Declined"
         friend_request.save()
+
+
+class ParticipationRequestService:
+    """Сервис для обработки заявок на участие в мероприятии."""
+
+    @staticmethod
+    @transaction.atomic
+    @handle_not_found
+    def accept_event_participation(request_id, user):
+        """Принятие заявки на участие в мероприятии.
+
+        Меняется статус заявки на "Принято", заполняется поле "Кем обработано".
+
+        Cоздается объект EventMember.
+        """
+        participation_request = ParticipationRequest.objects.get(
+            pk=request_id, status="Pending"
+        )
+        participation_request.status = "Accepted"
+        participation_request.processed_by = user
+        participation_request.save()
+        EventMember.objects.get_or_create(
+            user=participation_request.from_user,
+            event=participation_request.event,
+            is_organizer=False,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    @handle_not_found
+    def decline_event_participation(request_id, user):
+        """Отклонение заявки на участие в мероприятии.
+
+        Меняется статус заявки на "Отклонено".
+
+        Заполняется поле "Кем обработано".
+        """
+        participation_request = ParticipationRequest.objects.get(
+            pk=request_id, status="Pending"
+        )
+        participation_request.status = "Declined"
+        participation_request.processed_by = user
+        participation_request.save()
