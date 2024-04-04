@@ -19,6 +19,8 @@ MIN_USER_AGE = 14
 MAX_USER_AGE = 120
 MAX_LENGTH_TEXT = 1000
 
+MAX_DISTANCE = 500
+
 
 class Messages(object):
     """Сообщения."""
