@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 
 import django_filters
@@ -69,12 +70,19 @@ class EventDateFilter(django_filters.Filter):
 
     def filter(self, queryset, value):
         """Метод фильтрации в интервале дат start_date и end_date."""
-        if value:
+        try:
+            date_value = datetime.datetime.strptime(value, "%Y-%m-%d").date()
             return queryset.filter(
-                Q(start_date__date__lte=value)
-                & (Q(end_date__date__gte=value) | Q(end_date__isnull=True))
+                Q(start_date__date__lte=date_value)
+                & (
+                    Q(end_date__date__gte=date_value)
+                    | Q(end_date__isnull=True)
+                )
             )
-        return queryset
+        except ValueError as error:
+            raise ValueError(
+                "Фильтр по дате не соответствует шаблону '%Y-%m-%d'.", error
+            )
 
 
 class MinAgeFilter(django_filters.Filter):
