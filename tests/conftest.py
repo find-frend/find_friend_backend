@@ -29,4 +29,5 @@ if FILENAME not in project_dir_content:
 pytest_plugins = [
     "tests.fixtures.fixture_user",
     "tests.fixtures.fixture_data",
+    "tests.fixtures.fixture_settings",
 ]
