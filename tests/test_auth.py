@@ -181,8 +181,17 @@ class TestAuthAPI:
             f"{HTTPStatus.UNAUTHORIZED}, а не {users_me_response.status_code}."
         )
 
-    def test_auth_authorized_user(self, client):
-        """Проверка доступа к ресурсам, требующим аутентификации."""
+    def test_auth_authenticated_user(self, user_client):
+        """У аутентифицированного пользователя должен быть доступ."""
+        users_me_response = user_client.get(self.user_profile_url)
+        assert users_me_response.status_code == HTTPStatus.OK, (
+            "При обращении аутентифицированного пользователя к ресурсу "
+            f"`{self.user_profile_url}` должен возвращаться статус "
+            f"{HTTPStatus.OK}, а вернулся {users_me_response.status_code}."
+        )
+
+    def test_auth_unauthenticated_user(self, client):
+        """У анонимного пользователя не должно быть доступа."""
         users_me_response = client.get(self.user_profile_url)
         assert users_me_response.status_code == HTTPStatus.OK, (
             "При обращении аутентифицированного пользователя к ресурсу "
