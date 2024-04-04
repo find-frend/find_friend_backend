@@ -193,8 +193,9 @@ class TestAuthAPI:
     def test_auth_unauthenticated_user(self, client):
         """У анонимного пользователя не должно быть доступа."""
         users_me_response = client.get(self.user_profile_url)
-        assert users_me_response.status_code == HTTPStatus.OK, (
-            "При обращении аутентифицированного пользователя к ресурсу "
+        assert users_me_response.status_code == HTTPStatus.UNAUTHORIZED, (
+            "При обращении неаутентифицированного пользователя к ресурсу "
             f"`{self.user_profile_url}` должен возвращаться статус "
-            f"{HTTPStatus.OK}, а вернулся {users_me_response.status_code}."
+            f"{HTTPStatus.UNAUTHORIZED}, а вернулся "
+            f"{users_me_response.status_code}."
         )
