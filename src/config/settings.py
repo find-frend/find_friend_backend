@@ -279,8 +279,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-MAX_DISTANCE = 500
-
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
