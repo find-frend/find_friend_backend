@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from config import settings
+from config.constants import MAX_DISTANCE
 from events.models import Event, EventLocation, ParticipationRequest
 from notifications.models import Notification, NotificationSettings
 from users.models import (
@@ -231,7 +231,7 @@ class MyUserViewSet(UserViewSet):
         if self.request.query_params and self.request.query_params["search"]:
             max_distance = int(self.request.query_params["search"])
         else:
-            max_distance = settings.MAX_DISTANCE
+            max_distance = MAX_DISTANCE
         for location in locations:
             distance = get_user_distance(
                 self.request.user, location.user, (location.lat, location.lon)
@@ -462,7 +462,7 @@ class EventViewSet(ModelViewSet):
         if self.request.query_params and self.request.query_params["search"]:
             max_distance = int(self.request.query_params["search"])
         else:
-            max_distance = settings.MAX_DISTANCE
+            max_distance = MAX_DISTANCE
         for location in locations:
             distance = get_event_distance(
                 self.request.user, location.event, (location.lat, location.lon)
