@@ -1,5 +1,7 @@
 import pytest
 
+from users.models import Friendship
+
 
 @pytest.fixture
 def user(django_user_model):
@@ -55,3 +57,9 @@ def user_client(create_token, user):
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Token {create_token(user)}")
     return client
+
+
+@pytest.fixture
+def friends(db, user, another_user):
+    """Дружба между пользователями."""
+    return Friendship.objects.create(initiator=user, friend=another_user)

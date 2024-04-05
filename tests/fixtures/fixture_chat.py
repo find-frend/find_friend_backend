@@ -9,11 +9,11 @@ from users.models import Friendship
 
 
 @pytest.fixture
-def chat(db, user, another_user):
+def chat(db, friends):
     """Тестовый чат."""
-    Friendship.objects.create(initiator=user, friend=another_user)
-
-    return Chat.objects.create(initiator=user, receiver=another_user)
+    return Chat.objects.create(
+        initiator=friends.initiator, receiver=friends.friend
+    )
 
 
 @pytest.fixture
