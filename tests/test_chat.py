@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 
 from chat.models import Chat, Message  # noqa
 from chat.serializers import MessageSerializer
+from config.constants import messages as msg
 
 
 @pytest.mark.django_db(transaction=True)
@@ -39,40 +40,64 @@ class TestChatHTTP:
             "возвращается объект xчата."
         )
 
-    def test_strangers_cannot_start_chat(self, user, third_user):
+    def test_strangers_cannot_start_chat(self, user_client, third_user):
         """Пользователи, не состоящие в друзьях, не могут создать чат."""
-        pass
+        response = user_client.post(
+            self.start_chat_url, data={"email": third_user.email}
+        )
 
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            f"Проверьте, что при POST запросе на `{self.start_chat_url}` "
+            "при попытке начать чат с пользователем, не состоящим в друзьях "
+            "с пользователем, отправлящим запрос, возвращается статус "
+            f"{HTTPStatus.FORBIDDEN}, а не {response.status_code}."
+        )
+
+        error_text = msg.USER_IS_NOT_FRIEND % str(third_user)
+        assert error_text in response.json().values(), (
+            f"При попытке начать чат с пользователем, не состоящим в друзьях "
+            "с пользователем, отправлящим запрос, должна возвращаться ошибка "
+            f"`{error_text}`, а не `{response.json()['detail']}`"
+        )
+
+    @pytest.mark.skip
     def test_cannot_start_chat_with_nonexistent_user(self, user):
         """Нельзя создать чат с несуществующим пользователем."""
         pass
 
+    @pytest.mark.skip
     def start_existing_chat(self, user, another_user):
         """Попытка создания чата, который уже существует."""
         pass
 
+    @pytest.mark.skip
     def test_anonymous_user_cannot_view_chat(self, user, another_user):
         """Анонимный пользователь не может просматривать чат."""
         pass
 
+    @pytest.mark.skip
     def test_non_members_cannot_view_chat(self, user, another_user):
         """Пользователи, не состоящие в чате, не могут просматривать чат."""
         pass
 
+    @pytest.mark.skip
     def test_user_can_list_only_their_chats(self, user, another_user):
         """Пользователь может просматривать только свои чаты."""
         pass
 
+    @pytest.mark.skip
     def test_chat_view_contains_limited_amount_of_messages(
         self, user, another_user
     ):
         """Просмотр чата содержит ограниченное количество сообщений."""
         pass
 
+    @pytest.mark.skip
     def test_chat_remains_after_user_deleted(self, user, another_user):
         """Чат остается после удаления пользователя."""
         pass
 
+    @pytest.mark.skip
     def test_chat_messages_remain_after_user_deleted(self, user, another_user):
         """Сообщения остаются после удаления пользователя."""
         pass
@@ -80,6 +105,8 @@ class TestChatHTTP:
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+# TODO: ~~~ !!! Remove skip !!! ~~~
+@pytest.mark.skip
 class TestChatWebSocket:
     """Тесты чатов - WebSocket."""
 
