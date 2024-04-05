@@ -60,10 +60,25 @@ class TestChatHTTP:
             f"`{error_text}`, а не `{response.json()['detail']}`"
         )
 
-    @pytest.mark.skip
-    def test_cannot_start_chat_with_nonexistent_user(self, user):
+    def test_cannot_start_chat_with_nonexistent_user(self, user_client):
         """Нельзя создать чат с несуществующим пользователем."""
-        pass
+        response = user_client.post(
+            self.start_chat_url, data={"email": "nonexistent@test.ru"}
+        )
+
+        assert response.status_code == HTTPStatus.NOT_FOUND, (
+            f"Проверьте, что при POST запросе на `{self.start_chat_url}` "
+            "при попытке начать чат с несуществующим пользователем "
+            f"возвращается статус {HTTPStatus.NOT_FOUND}, а не "
+            f"{response.status_code}."
+        )
+
+        error_text = msg.CANNOT_START_CHAT_WITH_NONEXISTENT_USER
+        assert error_text in response.json().values(), (
+            f"При попытке начать чат с несуществующим пользователем "
+            f"должна возвращаться ошибка `{error_text}`, а не "
+            f"`{response.json()['detail']}`"
+        )
 
     @pytest.mark.skip
     def start_existing_chat(self, user, another_user):
