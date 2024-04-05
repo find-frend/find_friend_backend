@@ -1,8 +1,7 @@
 import pytest
 
-from chat.models import Chat
 from events.models import Event
-from users.models import City, Friendship
+from users.models import City
 
 
 @pytest.fixture
@@ -41,11 +40,3 @@ def event_2(city):
         min_count_members=5,
         max_count_members=10,
     )
-
-
-@pytest.fixture
-def chat(user, another_user):
-    """Тестовые данные для чата."""
-    Friendship.objects.create(initiator=user, friend=another_user)
-
-    return Chat.objects.create(initiator=user, receiver=another_user)

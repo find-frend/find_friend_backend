@@ -24,19 +24,34 @@ def another_user(django_user_model):
 
 
 @pytest.fixture
-def token(user):
-    """Создание токена для пользователя."""
-    from rest_framework.authtoken.models import Token
-
-    token, _ = Token.objects.get_or_create(user=user)
-    return token.key
+def third_user(django_user_model):
+    """Тестовые данные для пользователя 3."""
+    return django_user_model.objects.create_user(
+        first_name="Третий",
+        last_name="Юзер",
+        password="alskdj03",
+        email="testthree@test.ru",
+    )
 
 
 @pytest.fixture
-def user_client(token):
+def create_token():
+    """Фабрика создания токена для пользователя."""
+
+    def _create_token(_user):
+        from rest_framework.authtoken.models import Token
+
+        token, _ = Token.objects.get_or_create(user=_user)
+        return token.key
+
+    return _create_token
+
+
+@pytest.fixture
+def user_client(create_token, user):
     """Создание клиента для аутентифицированного пользователя."""
     from rest_framework.test import APIClient
 
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+    client.credentials(HTTP_AUTHORIZATION=f"Token {create_token(user)}")
     return client
