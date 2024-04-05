@@ -6,9 +6,60 @@ from chat.serializers import MessageSerializer
 
 
 @pytest.mark.django_db(transaction=True)
+class TestChatHTTP:
+    """Тесты чатов - HTTP."""
+
+    start_chat_url = "/api/v1/chats/start/"
+    view_chat_url = "/api/v1/chats/%d/"
+    list_chats_url = "/api/v1/chats/"
+
+    def test_friends_can_start_chat(self, user, another_user):
+        """Друзья могут создать чат."""
+        pass
+
+    def test_strangers_cannot_start_chat(self, user, third_user):
+        """Пользователи, не состоящие в друзьях, не могут создать чат."""
+        pass
+
+    def test_cannot_start_chat_with_nonexistent_user(self, user):
+        """Нельзя создать чат с несуществующим пользователем."""
+        pass
+
+    def start_existing_chat(self, user, another_user):
+        """Попытка создания чата, который уже существует."""
+        pass
+
+    def test_anonymous_user_cannot_view_chat(self, user, another_user):
+        """Анонимный пользователь не может просматривать чат."""
+        pass
+
+    def test_non_members_cannot_view_chat(self, user, another_user):
+        """Пользователи, не состоящие в чате, не могут просматривать чат."""
+        pass
+
+    def test_user_can_list_only_their_chats(self, user, another_user):
+        """Пользователь может просматривать только свои чаты."""
+        pass
+
+    def test_chat_view_contains_limited_amount_of_messages(
+        self, user, another_user
+    ):
+        """Просмотр чата содержит ограниченное количество сообщений."""
+        pass
+
+    def test_chat_remains_after_user_deleted(self, user, another_user):
+        """Чат остается после удаления пользователя."""
+        pass
+
+    def test_chat_messages_remain_after_user_deleted(self, user, another_user):
+        """Сообщения остаются после удаления пользователя."""
+        pass
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-class TestWebSocket:
-    """Тесты для WebSocket."""
+class TestChatWebSocket:
+    """Тесты чатов - WebSocket."""
 
     async def test_can_connect_to_server(
         self,
@@ -72,9 +123,10 @@ class TestWebSocket:
 
         # Пользователь 2 получает сообщение в виде JSON (объект сообщения)
         response = await another_ws_connection.receive_json_from()
+        # Поля в JSON соответствуют полям в сериализаторе
         for field in list(MessageSerializer().get_fields().keys()):
             assert field in response
-        # Текст в JSON соответствует отправленному тексту
+        # Текст сообщения в JSON соответствует отправленному тексту
         assert response["text"] == "Test message from User 1"
 
         # Сообщение должно сохраниться в базе
