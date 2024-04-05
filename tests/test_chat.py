@@ -104,10 +104,23 @@ class TestChatHTTP:
             f"{HTTPStatus.UNAUTHORIZED}, а не {response.status_code}."
         )
 
-    @pytest.mark.skip
-    def test_non_members_cannot_view_chat(self, user, another_user):
+    def test_non_members_cannot_view_chat(self, chat, third_user_client):
         """Пользователи, не состоящие в чате, не могут просматривать чат."""
-        pass
+        url = self.view_chat_url % chat.id
+        response = third_user_client.get(url)
+
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            f"Проверьте, что при GET запросе на `{url}` "
+            "от пользователя, не состоящего в чате, возвращается статус "
+            f"{HTTPStatus.FORBIDDEN}, а не {response.status_code}."
+        )
+
+        error_text = msg.USER_NOT_ALLOWED_TO_VIEW_CHAT
+        assert error_text in response.json().values(), (
+            "При попытке просмотра чата пользователем, не являющимся "
+            "его участником, должна возвращаться ошибка "
+            f"`{error_text}`, а не `{response.json()['detail']}`"
+        )
 
     @pytest.mark.skip
     def test_user_can_list_only_their_chats(self, user, another_user):
