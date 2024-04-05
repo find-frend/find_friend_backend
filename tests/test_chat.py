@@ -93,10 +93,16 @@ class TestChatHTTP:
             f"{HTTPStatus.FOUND}, а не {response.status_code}."
         )
 
-    @pytest.mark.skip
-    def test_anonymous_user_cannot_view_chat(self, user, another_user):
+    def test_anonymous_user_cannot_view_chat(self, client, chat):
         """Анонимный пользователь не может просматривать чат."""
-        pass
+        url = self.view_chat_url % chat.id
+        response = client.get(url)
+
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, (
+            f"Проверьте, что при GET запросе на `{url}` "
+            "анонимному пользователю возвращается статус "
+            f"{HTTPStatus.UNAUTHORIZED}, а не {response.status_code}."
+        )
 
     @pytest.mark.skip
     def test_non_members_cannot_view_chat(self, user, another_user):
