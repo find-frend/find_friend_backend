@@ -37,7 +37,7 @@ class TestChatHTTP:
             for field in ["initiator", "receiver", "chat_messages"]
         ), (
             f"Проверьте, что при POST запросе на `{self.start_chat_url}` "
-            "возвращается объект xчата."
+            "возвращается объект чата."
         )
 
     def test_strangers_cannot_start_chat(self, user_client, third_user):
@@ -80,10 +80,18 @@ class TestChatHTTP:
             f"`{response.json()['detail']}`"
         )
 
-    @pytest.mark.skip
-    def start_existing_chat(self, user, another_user):
+    def test_start_existing_chat(self, chat, user_client):
         """Попытка создания чата, который уже существует."""
-        pass
+        response = user_client.post(
+            self.start_chat_url, data={"email": chat.receiver.email}
+        )
+
+        assert response.status_code == HTTPStatus.FOUND, (
+            f"Проверьте, что при POST запросе на `{self.start_chat_url}` "
+            "при попытке начать уже существующий чат происходит редирект "
+            "на страницу просмотра чата и возвращается статус "
+            f"{HTTPStatus.FOUND}, а не {response.status_code}."
+        )
 
     @pytest.mark.skip
     def test_anonymous_user_cannot_view_chat(self, user, another_user):
