@@ -1,7 +1,9 @@
+from http import HTTPStatus
+
 import pytest
 from asgiref.sync import sync_to_async
 
-from chat.models import Message
+from chat.models import Chat, Message  # noqa
 from chat.serializers import MessageSerializer
 
 
@@ -13,9 +15,29 @@ class TestChatHTTP:
     view_chat_url = "/api/v1/chats/%d/"
     list_chats_url = "/api/v1/chats/"
 
-    def test_friends_can_start_chat(self, user, another_user):
+    def test_friends_can_start_chat(self, user_client, friends):
         """Друзья могут создать чат."""
-        pass
+        response = user_client.post(
+            self.start_chat_url, data={"email": friends.friend.email}
+        )
+
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            f"Страница `{self.start_chat_url}` не найдена, "
+            "проверьте этот адрес в *urls.py*"
+        )
+
+        assert (
+            response.status_code == HTTPStatus.OK
+        ), f"Страница `{self.start_chat_url}` работает неправильно!"
+
+        chat_created_data = response.json()
+        assert all(
+            field in chat_created_data
+            for field in ["initiator", "receiver", "chat_messages"]
+        ), (
+            f"Проверьте, что при POST запросе на `{self.start_chat_url}` "
+            "возвращается объект xчата."
+        )
 
     def test_strangers_cannot_start_chat(self, user, third_user):
         """Пользователи, не состоящие в друзьях, не могут создать чат."""
