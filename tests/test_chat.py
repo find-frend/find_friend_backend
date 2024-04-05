@@ -122,10 +122,29 @@ class TestChatHTTP:
             f"`{error_text}`, а не `{response.json()['detail']}`"
         )
 
-    @pytest.mark.skip
-    def test_user_can_list_only_their_chats(self, user, another_user):
+    def test_user_can_list_only_their_chats(
+        self, chat, third_user, third_user_client
+    ):
         """Пользователь может просматривать только свои чаты."""
-        pass
+        response = third_user_client.get(self.list_chats_url)
+
+        assert response.status_code == HTTPStatus.OK, (
+            f"Проверьте, что при GET запросе на `{self.list_chats_url}` "
+            "аутентифицированному пользователю возвращается статус "
+            f"{HTTPStatus.OK}, а не {response.status_code}."
+        )
+
+        assert chat
+
+        if response.json():
+            assert any(
+                (
+                    response.json()[0]["initiator"]["email"]
+                    == third_user.email,
+                    response.json()[0]["receiver"]["email"]
+                    == third_user.email,
+                )
+            )
 
     @pytest.mark.skip
     def test_chat_view_contains_limited_amount_of_messages(
