@@ -3,9 +3,11 @@ from http import HTTPStatus
 import pytest
 from asgiref.sync import sync_to_async
 
-from chat.models import Chat, Message  # noqa
+from chat.models import Chat, Message
 from chat.serializers import MessageSerializer
+from config import constants as cnst
 from config.constants import messages as msg
+from users.models import User
 
 
 @pytest.mark.django_db(transaction=True)
@@ -146,28 +148,35 @@ class TestChatHTTP:
                 )
             )
 
-    @pytest.mark.skip
     def test_chat_view_contains_limited_amount_of_messages(
-        self, user, another_user
+        self, user_client, chat, many_messages
     ):
         """Просмотр чата содержит ограниченное количество сообщений."""
-        pass
+        response = user_client.get(self.view_chat_url % chat.id)
 
-    @pytest.mark.skip
-    def test_chat_remains_after_user_deleted(self, user, another_user):
+        qty_messages_at_connect = len(response.json()["chat_messages"])
+        assert qty_messages_at_connect < len(many_messages)
+        assert qty_messages_at_connect == cnst.MAX_MESSAGES_IN_CHAT
+
+    def test_chat_remains_after_user_deleted(self, user, another_user, chat):
         """Чат остается после удаления пользователя."""
-        pass
+        User.objects.filter(id=user.id).delete()
+        User.objects.filter(id=another_user.id).delete()
 
-    @pytest.mark.skip
-    def test_chat_messages_remain_after_user_deleted(self, user, another_user):
+        assert Chat.objects.filter(id=chat.id).exists()
+
+    def test_chat_messages_remain_after_user_deleted(
+        self, user, chat, many_messages
+    ):
         """Сообщения остаются после удаления пользователя."""
-        pass
+        User.objects.filter(id=user.id).delete()
+
+        assert len(Message.objects.filter(chat=chat)) == len(many_messages)
+        assert Message.objects.filter(chat=chat).first().sender is None
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-# TODO: ~~~ !!! Remove skip !!! ~~~
-@pytest.mark.skip
 class TestChatWebSocket:
     """Тесты чатов - WebSocket."""
 

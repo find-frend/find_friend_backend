@@ -3,8 +3,9 @@ import pytest_asyncio
 from asgiref.sync import sync_to_async
 from channels.testing import WebsocketCommunicator
 
-from chat.models import Chat
+from chat.models import Chat, Message
 from config.asgi import application
+from config.constants import MAX_MESSAGES_IN_CHAT
 from users.models import Friendship
 
 
@@ -14,6 +15,21 @@ def chat(db, friends):
     return Chat.objects.create(
         initiator=friends.initiator, receiver=friends.friend
     )
+
+
+@pytest.fixture
+def many_messages(user, chat):
+    """Создание множества сообщений."""
+    messages = []
+    text_template = "Message{}"
+    for i in range(MAX_MESSAGES_IN_CHAT + 1):
+        sender = user
+        chat_instance = chat
+        text = text_template.format(i)
+        message = Message(sender=sender, chat=chat_instance, text=text)
+        messages.append(message)
+    Message.objects.bulk_create(messages)
+    return messages
 
 
 @pytest.fixture

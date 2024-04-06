@@ -1,4 +1,5 @@
 import pytest
+from rest_framework.test import APIClient
 
 from users.models import Friendship
 
@@ -52,8 +53,6 @@ def create_token():
 @pytest.fixture
 def user_client(create_token, user):
     """Создание клиента для аутентифицированного пользователя 1."""
-    from rest_framework.test import APIClient
-
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Token {create_token(user)}")
     return client
@@ -62,8 +61,6 @@ def user_client(create_token, user):
 @pytest.fixture
 def third_user_client(create_token, third_user):
     """Создание клиента для аутентифицированного пользователя 3."""
-    from rest_framework.test import APIClient
-
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Token {create_token(third_user)}")
     return client
