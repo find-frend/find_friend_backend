@@ -13,7 +13,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer, SlugRelatedField
 
 from config.constants import messages
-from events.models import Event, EventMember
+from events.models import Event, EventMember, ParticipationRequest
 from notifications.models import Notification, NotificationSettings
 from users.models import (
     Blacklist,
@@ -369,6 +369,25 @@ class EventSerializer(ModelSerializer):
                 is_organizer=is_organizers[i],
             )
         return super().update(instance, validated_data)
+
+
+class ParticipationSerializer(ModelSerializer):
+    """Сериализатор для заявок на участие в мероприятии."""
+
+    class Meta:
+        model = ParticipationRequest
+        fields = "__all__"
+        read_only_fields = ("from_user", "status", "processed_by")
+
+    def validate(self, data):
+        """Проверяет валидность данных."""
+        if ParticipationRequest.objects.filter(
+            from_user=self.context["request"].user, event=data["event"]
+        ).exists():
+            raise serializers.ValidationError(
+                "Заявка на участие в мероприятии уже отправлена."
+            )
+        return data
 
 
 class MyEventSerializer(ModelSerializer):

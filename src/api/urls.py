@@ -13,6 +13,7 @@ from .views import (
     InterestViewSet,
     MyUserViewSet,
     NotificationViewSet,
+    ParticipationViewSet,
 )
 
 app_name = "api"
@@ -27,6 +28,9 @@ router.register("interests", InterestViewSet, basename="interests")
 router.register("cities", CityViewSet, basename="cities")
 router.register(r"friends", FriendRequestViewSet, basename="friends")
 router.register(r"notification", NotificationViewSet, basename="notification")
+router.register(
+    r"participation", ParticipationViewSet, basename="participation"
+)
 
 # URL'ы djoser'а, переопределяем для корректной генерации документации swagger
 djoser_urlpatterns = [
