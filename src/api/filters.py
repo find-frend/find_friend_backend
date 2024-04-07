@@ -70,19 +70,24 @@ class EventDateFilter(django_filters.Filter):
 
     def filter(self, queryset, value):
         """Метод фильтрации в интервале дат start_date и end_date."""
-        try:
-            date_value = datetime.datetime.strptime(value, "%Y-%m-%d").date()
-            return queryset.filter(
-                Q(start_date__date__lte=date_value)
-                & (
-                    Q(end_date__date__gte=date_value)
-                    | Q(end_date__isnull=True)
+        if value:
+            try:
+                date_value = datetime.datetime.strptime(
+                    value, "%Y-%m-%d"
+                ).date()
+                return queryset.filter(
+                    Q(start_date__date__lte=date_value)
+                    & (
+                        Q(end_date__date__gte=date_value)
+                        | Q(end_date__isnull=True)
+                    )
                 )
-            )
-        except ValueError as error:
-            raise ValueError(
-                "Фильтр по дате не соответствует шаблону '%Y-%m-%d'.", error
-            )
+            except ValueError as error:
+                raise ValueError(
+                    "Фильтр по дате не соответствует шаблону '%Y-%m-%d'.",
+                    error,
+                )
+        return queryset
 
 
 class MinAgeFilter(django_filters.Filter):
