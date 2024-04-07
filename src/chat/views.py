@@ -1,5 +1,6 @@
 from django.db.models import Q
-from django.shortcuts import redirect, reverse
+from django.http import HttpResponseRedirect
+from django.shortcuts import reverse
 from rest_framework import exceptions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -32,7 +33,9 @@ def start_chat(request):
         | Q(initiator=participant, receiver=request.user)
     )
     if chat.exists():
-        return redirect(reverse("api:chat:get_chat", args=(chat[0].id,)))
+        return HttpResponseRedirect(
+            reverse("api:chat:get_chat", args=(chat[0].id,))
+        )
 
     # Если чат еще не существует, создаем его
     chat = Chat.objects.create(initiator=request.user, receiver=participant)
