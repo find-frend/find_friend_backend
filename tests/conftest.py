@@ -30,6 +30,7 @@ pytest_plugins = [
     "tests.fixtures.fixture_user",
     "tests.fixtures.fixture_data",
     "tests.fixtures.fixture_blacklist",
+    "tests.fixtures.fixture_geolocation",
     "tests.fixtures.fixture_settings",
     "tests.fixtures.fixture_chat",
 ]
